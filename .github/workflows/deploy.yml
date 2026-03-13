@@ -50,7 +50,7 @@ jobs:
 
       # Build the book (this executes code cells)
       - name: Build HTML
-        run: jupyter-book build --html
+        run: jupyter-book build --execute --html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
