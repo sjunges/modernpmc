@@ -33,7 +33,8 @@ project:
     '\Smaxas': 'S^{max}_{=1}'
 site:
   template: book-theme
-  # options:
+  options:
   #   favicon: favicon.ico
   #   logo: site_logo.png
+    logo_text: Lecture Notes
 
