@@ -1,0 +1,39 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: b671e404-2fdb-42a5-83fd-2326c008e311
+  title: Model Checking Lecture Notes
+  # description:
+  # keywords: []
+  authors: [Sebastian Junges]
+  # github:
+  # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
+  toc:
+    - file: preface.md
+    - file: mdps.md
+    - file: appendix.md
+  math:
+    '\lfp': '\mathsf{lfp.}'
+    '\gfp': '\mathsf{gfp.}'
+    '\mdp': '\mathcal{M}'
+    '\mdptuple': '\langle S, A, \delta \rangle'
+    '\Distr': '\mathsf{Distr}\left(#1\right)'
+    '\sinit': 's_{\textrm{init}}'
+    '\supp': '\mathsf{supp}\left(#1\right)'
+    '\EnAct': 'A_{\mathsf{en}}\left(#1\right)'
+    '\ap': '\mathsf{AP}'
+    '\Policies': '\Pi'
+    '\MdPolicies': '\Pi_{md}'
+    '\Paths': '\mathsf{Paths}'
+    '\last': '\mathsf{last}(#1)'
+    '\pr': '\mathsf{Pr}'
+    '\Spos': 'S^{max}_{>0}'
+    '\Smaxzero': 'S^{max}_{=0}'
+    '\Szero': 'S^{min}_{=0}'
+    '\Smaxas': 'S^{max}_{=1}'
+site:
+  template: book-theme
+  # options:
+  #   favicon: favicon.ico
+  #   logo: site_logo.png
+
