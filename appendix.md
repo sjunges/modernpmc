@@ -18,6 +18,7 @@ $
 
 A distribution $\mu$ is Dirac, if $|\supp{\mu}|=1$.
 
+(app:fixpoints)=
 ## Fixpoint theory
 
 ### Lattices

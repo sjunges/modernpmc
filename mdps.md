@@ -3,6 +3,10 @@ numbering:
   heading_1: true
   heading_2: true
   heading_3: true
+
+kernelspec:
+  name: python3
+  display_name: Python 3
 ---
 
 
@@ -10,7 +14,22 @@ numbering:
 ```{attention}
 Examples are still missing.
 ```
-## What are Markov decision processes?
+
+```{code-cell} python
+import stormpy
+import stormpy.info
+stormpy.info.storm_version()
+```
+
+
+```{code-cell} python
+import stormvogel
+vis = stormvogel.show(
+    stormvogel.examples.create_car_mdp()
+)
+```
+
+# What are Markov decision processes?
 
 ```{prf:definition} Markov Decision Process
 An _MDP_ $\mdp$ is a tuple
