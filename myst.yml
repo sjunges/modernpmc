@@ -28,9 +28,20 @@ project:
     '\last': '\mathsf{last}(#1)'
     '\pr': '\mathsf{Pr}'
     '\Spos': 'S^{max}_{>0}'
+    '\Sposmin' : 'S^{min}_{>0}'
     '\Smaxzero': 'S^{max}_{=0}'
     '\Szero': 'S^{min}_{=0}'
     '\Smaxas': 'S^{max}_{=1}'
+    '\Sminas': 'S^{min}_{=1}'
+    '\infinite': '\mathsf{inf}(#1)'
+    '\drew': '\mathsf{disc}'
+    '\AP': '\mathsf{AP}'
+    '\ApTrace': '\mathsf{Tr}'
+    '\aptrace': '\mathsf{tr}(#1)'
+    '\opt': '\mathrm{opt}'
+    '\dfa': '\mathcal{A}'
+    '\Acc': '\mathsf{Acc}'
+    '\indicator': '[{#1}]'
 site:
   template: book-theme
   options:

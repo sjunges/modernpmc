@@ -38,6 +38,10 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
+      # Install graphviz for dot handling.
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
       # Install Python dependencies
       - name: Install Python dependencies
         run: |

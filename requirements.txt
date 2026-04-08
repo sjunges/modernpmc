@@ -1,2 +1,2 @@
-stormvogel
+stormvogel @ git+https://github.com/sjunges/stormvogel.git@dfaandvis
 stormpy
