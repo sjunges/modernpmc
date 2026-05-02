@@ -11,11 +11,14 @@ project:
   toc:
     - file: preface.md
     - file: mdps.md
+    - file: multiobjective.md
+    - file: robust.md
+    - file: parametric.md
     - file: appendix.md
   math:
     '\lfp': '\mathsf{lfp.}'
     '\gfp': '\mathsf{gfp.}'
-    '\mdp': '\mathcal{M}'
+    '\mdp': 'M'
     '\mdptuple': '\langle S, A, \delta \rangle'
     '\Distr': '\mathsf{Distr}\left(#1\right)'
     '\sinit': 's_{\textrm{init}}'
@@ -24,6 +27,7 @@ project:
     '\ap': '\mathsf{AP}'
     '\Policies': '\Pi'
     '\MdPolicies': '\Pi_{md}'
+    '\MrPolicies': '\Pi_{mr}'
     '\Paths': '\mathsf{Paths}'
     '\last': '\mathsf{last}(#1)'
     '\pr': '\mathsf{Pr}'
@@ -33,15 +37,31 @@ project:
     '\Szero': 'S^{min}_{=0}'
     '\Smaxas': 'S^{max}_{=1}'
     '\Sminas': 'S^{min}_{=1}'
+    '\Szerogp': 'S^{gp}_{=0}'
     '\infinite': '\mathsf{inf}(#1)'
     '\drew': '\mathsf{disc}'
     '\AP': '\mathsf{AP}'
     '\ApTrace': '\mathsf{Tr}'
     '\aptrace': '\mathsf{tr}(#1)'
     '\opt': '\mathrm{opt}'
+    '\Intervals': '\mathbb{I}'
     '\dfa': '\mathcal{A}'
     '\Acc': '\mathsf{Acc}'
     '\indicator': '[{#1}]'
+    '\ratfunc': '\mathbb{Q}(#1)'
+    '\poly': '\mathbb{Q}[#1]'
+    '\val': '\mathsf{val}'
+    '\pmdp': '\mathcal{M}'
+    '\imdp': '\mathcal{M}'
+    '\solfunc': '\mathsf{sol}'
+    '\generator': '\llbracket #1 \mid #2 \rrbracket'
+    '\generatorwd': '\llbracket #1 \rrbracket_\mathsf{wd}'
+    '\generatorint': '\llbracket #1 \rrbracket'
+    '\generatormd' : '\llbracket #1 \rrbracket_\mathsf{MD}'
+    '\generatormr': '\llbracket #1 \rrbracket_\mathsf{MR}'
+    '\bigland': '\bigwedge'
+    '\Ach': '\mathsf{Ach}'
+    '\abstract': '\mathsf{lift}(#1,#2)'
 site:
   template: book-theme
   options:

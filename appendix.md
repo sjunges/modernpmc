@@ -1,6 +1,31 @@
 
 # Appendix
 
+## Notation
+
+Let $b$ be a Boolean expression. $$ \indicator{b} = \begin{cases} 1 & \text{if } b \\ 0 & \text{otherwise.} \end{cases} $$
+We often use the indicator for expressions such as $\indicator{x = 0}$.
+
+## Polynomials and rational functions
+Let $X = \{ x_0, \dots, x_n \}$ denote an (ordered) set of variables.
+A _polynomial_ over $X$ is an expression of the shape $$ \sum_{i}^m c_i x_0^{e_{i,0}} \cdot x_1^{e_{i,1}} \cdot \dots \cdot x_n^{e_{i,n}}$$
+with exponents $e_{i,j} \in \mathbb{N}$ and coefficients $c_i \in \mathbb{Q}$. We denote the set of polynomials as $\poly{X}$. 
+
+A _rational function_ is a fraction of two polynomials. The set of rational functions is written \ratfunc{X}$.
+
+(app:geometry)=
+## Geometry
+
+Let $\vec{p} = (p_1, \ldots, p_m) \in \mathbb{R}^m$ be a point in an $m$-dimensional Euclidean space.  
+For $c \in \mathbb{R}$, let $c \cdot \vec{p} = (c \cdot p_1, \ldots, c \cdot p_m)$ be a scalar multiplication.
+-  $R \subseteq \mathbb{R}^m$ is _convex_ iff $\vec{p}, \vec{q} \in R$ implies  
+$c \cdot \vec{p} + (1 - c)\cdot \vec{q} \in R$ for all $c \in [0,1]$.
+- $R \subseteq \mathbb{R}^m$ is _downward-closed_ iff $\vec{p} \in R$ and $\vec{p} \geq \vec{q} \in \mathbb{R}^m$ implies $\vec{q} \in R$.
+
+We say $\vec{p} \in \mathbb{R}^m$ _dominates_ $\vec{q} \in \mathbb{R}^m$, written $\vec{p} \succ \vec{q}$, iff $\vec{p} \geq \vec{q}$ and $\vec{p} \ne \vec{q}$.
+
+
+
 ## Distributions
 
 A _discrete distribution_ over a set $X$ is a function

@@ -22,6 +22,7 @@ import sympy
 import stormvogel as sv
 import stormvogel.teaching as teach
 import stormvogel.bird as bird
+import stormvogel.to_dot
 sympy.init_printing()
 from IPython.display import Math
 import stormvogel.teaching.bellman as bellman
@@ -195,14 +196,18 @@ for all paths with the same last state.
 - A policy is _deterministic_ if every distribution $\pi(\xi)$ is Dirac.
 ````
 
-We denote the set of all policies with $\Policies$ and use $\MdPolicies$ for the memoryless deterministic policies
-
+We denote the set of all policies with $\Policies$. 
+We use $\MdPolicies$ for the memoryless deterministic policies and $\RdPolicies$ for the memoryless  (randomising) policies.
 Memoryless deterministic policies can be written as
 $
-\pi \colon S \rightarrow A.
+\pi \colon S \rightarrow A,
+$
+memoryless randomising as
+$
+\pi \colon S \rightarrow \Distr{A}.
 $
 
-We furthermore define the set of paths under a policy $\Paths^\pi$ as the set of policies that is consistent with a policy. 
+We furthermore define the set of paths under a policy $\Paths^\pi$ as the set of policies that is consistent with a policy $\pi$. 
 
 
 ### Induced Markov Chains
@@ -243,6 +248,12 @@ where
 These two constructions yield equivalent Markov chains
 (formally: almost bisimilar).
 ```
+
+````{prf:definition}
+def:mdps:generatorinduced
+Given a MDP $\mdp$ and a set of policies $\Pi$, we define $$ \generator{\mdp}{\Pi} = \{ \mdp[\pi] \mid \pi \in Pi \}. $$
+We define $$\generatormd = \generator{\mdp}{\MdPolicies} \text{ and } \generatorrd = \generator{\mdp}{\RdPolicies}$$
+````
 
 # Reachability probabilities
 
@@ -605,6 +616,122 @@ As memoryless deterministic policies suffice, we can compute minimal and maximal
 We note, however, that this is exponential in the number of states and therefore highly impractical.
 
 ## Policy iteration
+
+[//]: # (Policy iteration avoids the naive enumeration by constantly picking policies that improve upon the previous policy. )
+
+[//]: # (We start with some initial policy $\pi_0$, alternate between two steps until $\pi_{i} = \pi_{i+1}$.)
+
+[//]: # (- Evaluate $V^{\pi_i}$)
+
+[//]: # (- Set $\pi_{i+1}$ using $$ \pi_{i+1}&#40;s&#41; = \arg\max _{a} \sum_{s'} \delta&#40;s,a&#41;&#40;s'&#41; V^{\pi_i}&#40;s&#41; $$ and only change the action if it is a strict improvement!)
+
+[//]: # ()
+[//]: # (When maximising, any initial policy will do. When minimising, the initial policy must be _proper_. )
+
+[//]: # ()
+[//]: # ( ````{prf:example}                           )
+
+[//]: # (  :label: ex:pi:minreachparker                                                                                                                                    )
+
+[//]: # (                                                                                                                                                                )
+[//]: # (  We run policy iteration for minimal reachability probability on @fig:mdpparkervis                                                                              )
+
+[//]: # (  with $s_2$ as the target.               )
+
+[//]: # (                                                                                                                                                                  )
+[//]: # (  ```{code-cell} python                                                                                                                                           )
+
+[//]: # (  from stormvogel.teaching.policy_iteration import PI, initial_scheduler, visualise_pi_iterations                                                                 )
+
+[//]: # (                                                                                                                                                                  )
+[//]: # (  s2_parker = mdp_parker.get_states_with_label&#40;"s2"&#41;.pop&#40;&#41;                                                                                                      )
+
+[//]: # (  sched0 = initial_scheduler&#40;mdp_parker, one_states=[s2_parker], minimize=True&#41;                                                                                   )
+
+[//]: # (  pi = PI&#40;mdp_parker, sched0, one_states=[s2_parker], minimize=True&#41;                                                                                              )
+
+[//]: # (  visualise_pi_iterations&#40;pi&#41;             )
+
+[//]: # (  ```)
+
+[//]: # (                                                                                                                                                             )
+[//]: # (  PI converges in two steps. In step 0 the pessimistic initial scheduler sends $s_0$                                                                              )
+
+[//]: # (  to $s_1$ &#40;action $b$&#41;, yielding value 1; improvement then switches $s_0$ to action $a$.)
+
+[//]: # (  In step 1 the new scheduler is evaluated to give the minimal reachability probabilities,                                                                        )
+
+[//]: # (  and no further improvement is possible.                                                                                                                         )
+
+[//]: # (  ````                                                                                                                                                           )
+
+[//]: # (                          )
+[//]: # (                                                                                                                                                                      )
+[//]: # (  ````{prf:example}                                                                                                                                                  )
+
+[//]: # (  :label: ex:pi:improper                                                                                                                                               )
+
+[//]: # (                                          )
+[//]: # (  We demonstrate that PI requires a proper initial policy to find the *minimal*                                                                                        )
+
+[//]: # (  reachability probability. We use the optimistic scheduler &#40;which would be                                                                                            )
+
+[//]: # (  correct for maximisation&#41; as a starting point for a minimisation run.)
+
+[//]: # (                                                                                                                                                                       )
+[//]: # (  ```{code-cell} python                                                                                                                                                )
+
+[//]: # (  from stormvogel.teaching.policy_iteration import PI, initial_scheduler, visualise_pi_iterations                                                                      )
+
+[//]: # (                                                                                                                                                                                                                                                                              )
+[//]: # (  # Optimistic start: each state picks the action with the highest one-step)
+
+[//]: # (  # probability of reaching s2.  For s3 that is action a &#40;prob 1 to s2&#41;.                                                                                               )
+
+[//]: # (  bad_sched = initial_scheduler&#40;mdp_parker, one_states=[s2_parker], minimize=False&#41;                                                                                    )
+
+[//]: # (  pi_bad = PI&#40;mdp_parker, bad_sched, one_states=[s2_parker], minimize=True&#41;)
+
+[//]: # (  visualise_pi_iterations&#40;pi_bad&#41;                                                                                                                                      )
+
+[//]: # (  ```                                                                                                                                                                  )
+
+[//]: # (                                                                                                                                                                                )
+[//]: # (  PI terminates after a single step with all values equal to 1 — which is the                                                                                          )
+
+[//]: # (  *maximal* reachability probability, not the minimal one.  The culprit is $s_3$:                                                                                      )
+
+[//]: # (  under action $a$ it moves directly to $s_2$, so the induced DTMC assigns                                                                                           )
+
+[//]: # (  $V&#40;s_3&#41; = 1$.  When we try to improve, action $b$ &#40;self-loop&#41; also has                                                                                               )
+
+[//]: # (  expected value $1 \cdot V&#40;s_3&#41; = 1$, so no strict improvement is possible and                                                                                      )
+
+[//]: # (  PI gets stuck at this spurious fixed point.                                                                                                                          )
+
+[//]: # (                                                                                                                                                                       )
+[//]: # (  The fix is a *pessimistic* initial policy that steers away from the target,                                                                                          )
+
+[//]: # (  forcing zero states to be detected correctly:                                                                                                                        )
+
+[//]: # (                                                                                                                                                                       )
+[//]: # (  ```{code-cell} python                                                                                                                                                )
+
+[//]: # (  good_sched = initial_scheduler&#40;mdp_parker, one_states=[s2_parker], minimize=True&#41;                                                                                  )
+
+[//]: # (  pi_good = PI&#40;mdp_parker, good_sched, one_states=[s2_parker], minimize=True&#41;                                                                                          )
+
+[//]: # (  visualise_pi_iterations&#40;pi_good&#41;                                                                                                                                   )
+
+[//]: # (  ```                                                                                                                                                                  )
+
+[//]: # (                                                                                                                                                                       )
+[//]: # (  Now $s_3$ starts with action $b$ &#40;self-loop&#41;, its value is correctly identified)
+
+[//]: # (  as 0, and the second step finds the true minimal reachability probabilities.  )
+
+[//]: # (  ````                                                      )
+
 ```{attention}
 All content here is still missing. 
 ```
@@ -863,7 +990,8 @@ We consider the following small MDP.
 from stormvogel.examples.minitown import create_minitown_mdp
 
 mdp = create_minitown_mdp()
-sv.show(mdp)
+import stormvogel.to_dot            
+sv.to_dot.plot_model_pydot(mdp)
 ```
 ````
 
@@ -937,10 +1065,11 @@ $$ \pr^{\opt}_\mdp(s \models \dfa) = \pr^{\opt}_{\mdp \otimes \dfa}(\lozenge \{ 
 ```
 
 ````{prf:example} 
+The following visualises the product MDP for the DFA and the MDP above. 
 ```{code-cell} python
 :tags: [remove-input]
-
-sv.show(dfa.product(mdp, aut))
+import stormvogel.to_dot            
+sv.to_dot.plot_model_pydot(dfa.product(mdp, aut))
 ```
 ````
 
@@ -1125,6 +1254,9 @@ We can compute the expected reward by value iteration or policy iteration.
 Skipped for now.
 ```
 
+### Reachability probabilities as expected rewards
+Expected reachability rewards can express reachability probabilities. 
+
 ## Expected discounted total rewards
 ### Discounted rewards in Markov chains
 In a lot of MDP literature on planning (or control) problems, infinite horizon (total rewards) are studied. 
@@ -1151,7 +1283,7 @@ However, the correct interpretation of a discounted reward or any guarantee abou
 Content missing: Express total discounted reward as reachbility reward
 ```
 
-### Optimal discounted rewards in MDPs
+### Optimal discounted total rewards in MDPs
 We can now define $\mathbb{E}^{\max}(s \models \mathsf{tot}_\gamma)$ and $\mathbb{E}^{\min}(s \models \mathsf{tot}_\gamma)$
 analogously to $\pr^{\min}$ and $\pr^{\max}$. As before, memoryless deterministic policies suffice.
 
@@ -1179,6 +1311,13 @@ Furthermore, PI and VI can compute $\varepsilon$-precise results in polynomial t
 While using a discount factor towards one converges against the undiscounted total reward, 
 the performance of VI and PI quickly degrades with higher discount factors.
 
+```{prf:remark}
+The undiscounted total reward can also be defined,
+but will be infinite if there exists a reachable MEC with non-zero reward.
+If no such MEC exists, then this property can be rewritten
+as reachability reward in a modified MDP with a fresh target state.
+See also 
+```
 
 
 (sec:costbounded)=
