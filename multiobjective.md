@@ -83,23 +83,23 @@ With multiobjective model checking queries, we make the notion of achieving mult
 Throughout this chapter, we fix an MDP $\mdp$ with $n$ target sets $T_1, \dots, T_n$, $T_i \subseteq S$.
 The central multiobjective model checking problem is the following:
 ```{prf:definition} Multiobjective Model Checking Achievability Query
-Fix an MDP $\mdp$ with $n$ target sets $T_1, \dots, T_m$, $T_i \subseteq S$. 
-A policy $\pi$ _achieves_ a point $\vec{\lambda}$, if $$\bigland_{i \leq n} \pr_\pi(\lozenge T_i) \geq \lambda_i.$$
+Fix an MDP $\mdp$ with $m$ target sets $T_1, \dots, T_m$, $T_i \subseteq S$. 
+A policy $\pi$ _achieves_ a point $\vec{\lambda}$, if $$\bigland_{i \leq m} \pr_\pi(\lozenge T_i) \geq \lambda_i.$$
 We call $\pi$ a _witnessing policy_ for $\vec{\lambda}$.
-A point $\vec{\lambda} \in R^m$ is _achievable_, there exists a witnessping policy, i.e., $\vec{\lambda}$ is achievable if
+A point $\vec{\lambda} \in \mathbb{R}^m$ is _achievable_ if there exists a witnessing policy, i.e., $\vec{\lambda}$ is achievable if
 $$ \exists \pi \in \Policies. \bigland_{i \leq m} \pr_\pi(\lozenge T_i) \geq \lambda_i. $$
 We denote the set of achievable points with $\Ach_\mdp(T_1, \dots, T_m)$. 
 ```
 We simply write $\Ach$ whenever $\mdp$ and $T_1, \dots, T_m$ is clear from the context.
 
 ````{prf:example}
-Continueing the example above, the policy $\pi$ with $\pi(s_0) = γ$ and $\pi(s_4) = α$ witnesses the achievability of $(0.5, 0.5)$.
+Continuing the example above, the policy $\pi$ with $\pi(s_0) = γ$ and $\pi(s_4) = α$ witnesses the achievability of $(0.5, 0.5)$.
 While we can reach the red states with probability $0.9$ and the blue states with probability $0.6$, the point $(0.9, 0.6)$ is not achievable.
 ````
 
 Note that the literature considers a much wider variation of combinations of different objectives,
 including the combination of minimal and maximal reachability probabilities,
-the extension to rewards, cost-bounded reachability probabilities, LTL formula, etc, as well as their combinations.
+the extension to rewards, cost-bounded reachability probabilities, LTL formulas, etc., as well as their combinations.
 
 ### On witnessing policies
 
@@ -199,7 +199,7 @@ The convex closure is a bit more interesting.
 Intuitively, the idea is that if we pick two achievable points $\vec{p}_1, \vec{p}_2$, we can take two witnessing policies $\pi_1, \pi_2$. 
 If we now implement a protocol where we flip a coin with probability $c$, we play like policy $\pi_1$ and with probability $1-c$, we play like $\pi_2$.
 One needs some care to correctly define such convex combinations of policies. Consider, e.g., that $\pi_1$ stays forever in an MEC and $\pi_2$ leaves that MEC. 
-A naive realization of a convex combination of both policies would always leave the MEC. A thorough treatment of this topic can be found, e.g., in @. 
+A naive realization of a convex combination of both policies would always leave the MEC. A thorough treatment of this topic can be found, e.g., in @DBLP:phd/dnb/Quatmann23. 
 ```{prf:definition}
 A point $\vec{p} \in \mathbb{R}^m$ is _Pareto-optimal_ for targets $T_1, \dots, T_m$ iff for all $\vec{q} \in \mathbb{R}^m$:
 - $\vec{p} \succ \vec{q}$ implies $\vec{q} \in \mathrm{Ach}$, and
@@ -258,7 +258,7 @@ $$
 \begin{cases} \delta_\mathsf{orig}(s,a,s') & \text{if }c=\mathsf{succ}(b, s') \\ 
 0 & \text{otherwise.} \end{cases} 
 $$
-where $\mathsf{succ}(b,s')_i = b_i \lor \indicator{t\in T_i}$ for any $i$.
+where $\mathsf{succ}(b,s')_i = b_i \lor \indicator{s'\in T_i}$ for any $i$.
 ``` 
 ````{prf:example}
 :label:ex:multiobjective:unfolding
@@ -325,7 +325,7 @@ i.e., the sets of state where $T_i$ has not and has already been visited.
 
 Observe that along every path, one transitions either zero or one time from $S_{-i}$ to $S_{+i}$. 
 Thus, the expected number of such transitions coincides with the probability to go from $S_{-i}$ to $S_{+i}$.
-As one starts in $S_{-i}$ (the initial state is not part of $T_i$ by assumption), the probability to go from  $S_{-i}$ to $S_{+i}$ is the same to reach $S_{+1}$,
+As one starts in $S_{-i}$ (the initial state is not part of $T_i$ by assumption), the probability to go from  $S_{-i}$ to $S_{+i}$ is the same as the probability to reach $S_{+i}$,
 which is the same as the probability to reach a $T_i$ state. This justifies the following constraint:
 $$ \text{for all } i \leq m \sum_{s \in S_{-i}}\sum_{a}\sum_{s' \in S_{+i}} \delta(s,a,s')\cdot y_{s,a} \geq \lambda_i.$$
 If we put these constraints together, we get a sound and complete approach to check achievability.
@@ -372,7 +372,7 @@ More specifically, the key theorem to the approach is the following:
 ```{prf:theorem}
 Given $\vec{w} \in [0,1]^m$ and $$ \pi \in \arg\max_{\pi'}  \sum w_i \pr_{\pi'}(\lozenge T_i).$$
 Then: $$\vec{p} = (\pr_\pi(\lozenge T_1), \dots \pr_\pi(\lozenge T_m))$$ is on the boundary of the achievable points.
-For $w_i \in \in (0,1]^m$, the point $\vec{p}$ is Pareto-optimal.
+For $w_i \in (0,1]^m$, the point $\vec{p}$ is Pareto-optimal.
 ```
 Clearly, $\vec{p}$ is achievable by $\pi$. The argument that it is also Pareto optimal (for almost all $w$) follows from the fact that every point that dominates $p$ yields a higher weighted reachability.
 Assume that one of those points would be achievable by policy $\hat{\pi}$: Then $\hat{\pi}$ demonstrates that $\pi$ is not optimal w.r.t. weighted reachability, which is a contradiction to the definition.
@@ -388,7 +388,7 @@ from stormvogel.teaching.pareto import ParetoQuery, explore_pareto
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0)], figsize=(2, 2), legend="outside") 
 ```
 Importantly, we find a policy that achieves $(0.9, 0.1)$ and update the achievable region accordingly.
-We can also update the unachievable points (i.e, the complement of the upper bound), by ruling out the hyperplane.
+We can also update the unachievable points (i.e., the complement of the upper bound), by ruling out the hyperplane.
 
 Next, we optimize for the weight vector $(0,1)$.
 ```{code-cell} python
@@ -397,7 +397,7 @@ _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0)], figsize=(2, 2
 ```
 We now see that the convex hull is formed, in particular, points between  two achievable points must also be achievable.
 
-Next, we take an weight vector $(0.5, 0.3)$ orthogonal to the current face between the two Pareto-optimal points:
+Next, we take a weight vector $(0.5, 0.3)$ orthogonal to the current face between the two Pareto-optimal points:
 ```{code-cell} python
 :tags: [remove-input]
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.3, 0.5)], figsize=(2, 2), legend="outside") 
@@ -412,7 +412,7 @@ _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.3, 0.5), (0
 ````
 
 ````{prf:remark} On computing weighted reachability
-The weighted reachability query can be expressed as an total (undiscounted) reward query on the unfolding.
+The weighted reachability query can be expressed as a total (undiscounted) reward query on the unfolding.
 Specifically, you get reward $w_i$ for every transition between an $S_{-i}$ and $S_{+i}$, using the [earlier definitions](#def:splusandsminus). 
 While the total reward in general is infinite, it is not if the reward collectible in every MEC is zero.
 As the reward, by construction, is only awarded upon the first entry of some target set, we can only finitely often pick up reward.

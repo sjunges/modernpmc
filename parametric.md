@@ -48,10 +48,9 @@ We typically denote these as tuples $\langle S, \mathbf{x}, \delta \rangle$.
 ````{prf:example} Von Neumann Unbiased Coins 
 :label:ex:pmc:vonNeumannTrick
 
-Say we want simulate an unbiased, perfectly random coin flip. 
-We only have access to an old coin that most likely has some bias, and we can flip this  coin as much as we want.
-That is, we have access to an  
- using an infinite stream of \emph{biased} random bits,
+Say we want to simulate an unbiased, perfectly random coin flip.
+We only have access to an old, biased coin and can flip it as many times as we want —
+that is, we have access to an infinite stream of biased random bits,
 each of which is $0$ with some unknown but fixed probability $0<p<1$.
 A simple solution @vonneumannVariousTechniques1951 : 
 Extract the first two bits from the stream; if they are different, return the value of the first; otherwise try again.
@@ -89,10 +88,15 @@ The first has a bias $x$, the second a bias $y$.
 pkydie = examples.create_knuth_yao_pmc_twocoins()
 stormvogel.to_dot.plot_model_pydot(pkydie)
 ```
+Analysing the effect of $x$ and $y$ on the probability to reach, say, `rolled3` is non-trivial.
+Consider, e.g., the question of how to get this probability above a threshold, i.e., how to maximise the reachability probability.
+Clearly, $x$ should not be so small that the probability mass at the initial state flows into the right branch. 
+On the other hand, $x$ should also not be too large, as then, `rolled3` cannot be reached.
+The precise optimum depends on the influence of $s_3$, which itself depends on the value of $y$. 
 ````
 [^kydievariants]: We note that the precise transition relations differ over the literature: In particular, $x$ and $1-x$ is sometimes swapped in places.
 
-```{admonition}
+```{admonition} Note
 While we discuss the concepts generally for pMDPs, most examples and the algorithms later in this chapter focus on pMCs.
 ```
 
@@ -109,12 +113,26 @@ A valuation $\val$ is _well-defined_, if
 For the [Knuth-Yao die](#ex:parametric:kydie), the well-defined valuations are all valuations with $x,y \in [0,1]$. 
 For the following example, the well-defined valuations must assign $y \in [0,2]$ and $x+z=1$.
 ```{code-cell} python
-#TODO
+:tags: [remove-input]
+from stormvogel.parametric.region import plot_annotated_regions_1d                                                                                                                                                                                                                                                                    
+pmc = sv.model.new_dtmc(create_initial_state=False)                                                                                                                        
+x = pmc.declare_parameter("x")                                                                                                                                       
+y = pmc.declare_parameter("y")
+z = pmc.declare_parameter("z")
+                                                                                                                                                  
+t0 = pmc.new_state(["init"], friendly_name="s0")                                                                                                                     
+t1 = pmc.new_state(friendly_name="s1")                                                                                                                             
+t2 = pmc.new_state(["T"], friendly_name="s2")   
+                                                                                                                                                                     
+pmc.set_choices(t0, [(0.5*y,     t1), (1 - 0.5*y, t2)])                                                                                                                      
+pmc.set_choices(t1, [(x+z, t2)])                                                                                                                  
+pmc.set_choices(t2, [(1,     t2)])   
+stormvogel.to_dot.plot_model_pydot(pmc)
 ```
 ````
 Any pMDP together with a well-defined valuation thus describes an MDP.
 ```{prf:definition} Induced MDP
-Given a pMDP $\pmdp = \langle S, A, \mathbf{x}, \delta $ and a well-defined valuation $\val$,
+Given a pMDP $\pmdp = \langle S, A, \mathbf{x}, \delta \rangle$ and a well-defined valuation $\val$,
 the induced MDP $\pmdp[\val]$ is the MDP $\langle S, A, \delta' \rangle$,
 where $\delta'(s,a)(s') = \delta(s,a)(s')[\val]$ for all $s,s'$ and $a \in \EnAct{s}$.
 ```
@@ -127,7 +145,7 @@ stormvogel.to_dot.plot_model_pydot(induced, positions={induced.get_state_by_id(s
      induced.get_state_by_id(s0.state_id): (2,0), induced.get_state_by_id(s01.state_id): (4,0), induced.get_state_by_id(s1.state_id): (-2,0), induced.get_state_by_id(s10.state_id): (-4,0)})
 ```
 ````
-An important distinction can be made based on the graph-structure of the pMDP $\pmdp$ and the induced MDP $\mdp[\val]$.
+An important distinction can be made based on the graph-structure of the pMDP $\pmdp$ and the induced MDP $\pmdp[\val]$.
 Valuations where these coincide are called _graph-preserving_.
 ```{prf:definition} Graph-preserving valuations
 Given a pMDP $\pmdp = \langle S, A, \mathbf{x}, \delta \rangle$ over parameters $\mathbf{x}$. 
@@ -138,7 +156,7 @@ $$ \delta(s,a)(s')[\val] > 0 \text{ iff }\delta(s,a)(s') \neq 0\quad\text{for al
 We are often interested in sets of valuations, 
 which are commonly referred to as regions (based on a geometric interpretation).
 ```{prf:definition} Well-defined regions
-A set of valuations for an pMDP is called a region. 
+A set of valuations for a pMDP is called a region. 
 The _well-defined region_ is the set of all well-defined valuations.
 A region is _well-defined_, if it is a subset of the well-defined region.
 ```
@@ -189,9 +207,9 @@ The following lemmas between parametric MDPs with rectangular regions and interv
 Basically, we obtain an iMDP by replacing, for every parameter $x$, 
 every occurrence of $x$ with $[l_x, u_x]$ and every occurrence of $1-x$ by $[1-u_x, 1-l_x]$.
 ```{prf:definition} IMDP abstraction
-Given a simplex pMDP $\pmdp = \langle S, A, \delta \rangle$  with a rectangular region $R$. 
+Given a simple pMDP $\pmdp = \langle S, A, \delta \rangle$  with a rectangular region $R$. 
 The interval MDP lifting $\pmdp$ and $R$ is given by 
-$$ \abstract{\pmdp} = \langle S, A, \delta' \rangle $$
+$$ \abstract{\pmdp}{R} = \langle S, A, \delta' \rangle $$
 with $$ \delta'(s,a)(s') = \delta(s,a)(s')[x_1 \gets R(x_1), \dots , x_n \gets R(x_n)]$$ 
 using an interval extension of substitution.
 ```
@@ -257,7 +275,7 @@ Given an MDP $\mdp$[^representingpolicies:extendedtoparametric], we can represen
 This Markov chain is obtained by picking weights for every state-action combination, $w_{s,a}$.
 ```{prf:definition} Corresponding pMC for MDP
 Given an MDP $\mdp = \langle S, A, \delta \rangle$, 
-we define the underlying variables  $$\mathbf{x} = \{ w_{(s,a)} \mid s, \in S, a \in \EnAct{s} \}.$$
+we define the underlying variables  $$\mathbf{x} = \{ w_{(s,a)} \mid s \in S, a \in \EnAct{s} \}.$$
 For $\mdp$, we then define the _corresponding pMC_ $\mathsf{corresponding}(\mdp) = \langle S, A, \mathbf{x}, \delta' \rangle$,  with 
 $$ \delta(s,a)(s') = \begin{cases} \sum_{a} w_{s,a} \cdot \delta(s,a)(s') & \text{if } a \in \EnAct{s}  \\ 0 & \text{ otherwise.} \end{cases}$$
 ```
@@ -317,7 +335,7 @@ In particular, algorithms to compute solution functions compute functions that a
 ```
 
 ## Shape and size of solution functions
-It is sometimes interesting to reduce their domain of the solution function, e.g., to discuss the shape of the function,
+It is sometimes interesting to reduce the domain of the solution function, e.g., to discuss the shape of the function,
 e.g., to talk about the representation of solution functions on graph-preserving regions.
 The shape and size of solution functions is not arbitrary. 
 
@@ -380,10 +398,10 @@ Take any state with no incoming transition.
 Remove the state and all outgoing transitions.
 
 None of the steps above affects the reachability probability in any Markov chain generated by the pMC. 
-In particular, self-loop elimination is correct as taking a loop with transition probability $<1$ infinitely often has probability zero.
+In particular, self-loop elimination is correct: taking a loop with transition probability $<1$ infinitely often has probability zero.
 
 Eliminating states can be applied to any non-initial, non-sink state $s$. It runs transition shortcutting on all incoming transitions of $s$ and then optionally removes a state $s$.
-The state elimination algorithm removes self-loop elimination whenever possible and then eliminates non-initial, non-sink states.
+The state elimination algorithm removes self-loops whenever possible and then eliminates non-initial, non-sink states.
 
 ````{prf:example}
 We apply elimination steps on @ex:pmc:vonNeumannTrick, repeated here for convenience. 
@@ -424,7 +442,7 @@ stormvogel.to_dot.plot_model_pydot(vnpmccopy,positions={sinitcopy: (0,0), s0copy
 ````
 
 ````{prf:example}
-We now also run state elimination for @ex:par:kydie.
+We now also run state elimination for @ex:parametric:kydie.
 ```{code-cell} python
 :tags: [remove-input]
 import stormvogel.teaching.parametric as elim
@@ -486,7 +504,7 @@ A few remarks are in order:
 - It suffices to consider memoryless deterministic policies.
 
 ### Verification problems
-We can consider the duals the feasibility problems which intend to verify
+We can consider the duals of the feasibility problems which intend to verify
 that for every MDP, a property holds. Verification problems are often studied to ensure robustness against variations in the probability distributions.
 ```{admonition} Problem: Angelic verification  
 Given a pMDP $\pmdp$ with targets $T$, a well-defined region $R$, a _threshold_ $\lambda \in \mathbb{Q}$,  and $\bowtie \in \{\leq,\geq\}$, decide whether
@@ -550,7 +568,7 @@ In fact, the boundary is given by the solution function: {eval}`str(solfunc-thre
 ````
 In particular, given the continuity of the solution function on the well-defined region, the expression $\solfunc -\lambda = 0$ describes exactly the boundary between the safe and unsafe region!
 To avoid the limitations due to the size of the solution function, a popular approach is to approximate this set.
-```{admonition} Problem: Exact partitioning 
+```{admonition} Problem: Approximate partitioning 
 Given a pMDP $\pmdp$, a well-defined region $R$, a _threshold_ $\lambda \in \mathbb{Q}$,  and $\bowtie \in \{\leq,\geq\}$,
 compute sequences ${R_{\mathsf{safe}}}_{,i}$ and ${R_{\mathsf{unsafe}}}_{,i}$ such that:
 -  ${R_{\mathsf{safe}}}_{,i} \subset R_{\mathsf{safe}}$ for all $i$,
@@ -565,10 +583,7 @@ We now approximate the safe region from @ex:par:exactpartition. The following fi
 $R_{\mathsf{safe}}$ and $R_{\mathsf{unsafe}}$ are  both represented by a union of finitely many rectangular regions.
 ```{code-cell} python 
 :tags: [remove-input]
-                                                                                                                                          
-from stormvogel.examples.knuth_yao_pmc import create_knuth_yao_pmc_twocoins                                                                                          
-from stormvogel.teaching.parametric import parameter_space_partitioning                                                                                                                        
-                                                                                                                                                  
+from stormvogel.teaching.parametric import parameter_space_partitioning                                                                                                                                      
 annotated = parameter_space_partitioning(
     pkydie, prop, threshold, max_iterations=100
 )                                                                                                                                                                    
@@ -597,7 +612,7 @@ $$
 ```
 In interval MDPs, computing robust policies is equally hard as the verification problem.
 However, in parametric MDPs, finding robust policies is much harder - the policies typically require infinite amounts of memory and
-even when restring oneself to the memoryless policies with a single parameter is NP-hard.
+even when restricting oneself to the memoryless policies with a single parameter is NP-hard.
 Robust policies are currently not in the scope of these notes.
 
 ### Distributions over parameters
@@ -609,7 +624,7 @@ We have already discussed how exact partitioning relates to the solution functio
 applying verification algorithms on subregions. 
 We now focus on algorithms to solve feasibility and verification problems on pMCs.
 Many ideas carry over to pMDPs, but they are not discussed here.
-Furthermore, feasibility and verification are duals of eachother, thus a complete approach for feasibility is also a complete approach for verification. 
+Furthermore, feasibility and verification are duals of each other, thus a complete approach for feasibility is also a complete approach for verification. 
 However, positive answers on feasibility are significantly easier to obtain, and leads to different algorithmic choices.
 
 ## Encoding into the existential theory of the reals 
@@ -695,7 +710,7 @@ Rather than relying on the ETR encodings, we will use an abstraction-refinement 
 For that, we are interested in the value range of a region:
 $$ 
 V_{\pmdp,R} = [\min_{\mdp \in \generator{\pmdp}{R}} \pr^{\max}_{\mdp}(\lozenge T), \max_{\mdp \in \generator{\pmdp}{R}} \pr^{\max}_{\mdp}(\lozenge T) ].$$
-Computing this value range for parametric models is intuitively complicated because due to parameter dependencies, we cannot reason locally, as already pointed out in @ex:par:kydie.
+Computing this value range for parametric models is intuitively complicated because due to parameter dependencies, we cannot reason locally, as already pointed out in @ex:parametric:kydie.
 On the other hand, in absence of such dependencies, reasoning becomes much simpler.
 Thus, instead of the pMDP $\pmdp$, we analyze $\abstract{\pmdp}{R}$
 The value range of this iMDP  is 
@@ -722,11 +737,14 @@ the interval MDP abstraction is less coarse for smaller regions.
 In particular, due to the smoothness of the solution function on the graph-preserving region,
 if we converge towards point regions, we also converge against point intervals for both the value of a region of a PMDP and the value of its abstraction.
 
-
 ````{prf:example}
-We reconsider the following example on region $R=[0.1, 0.9]$.
+We reconsider the following example on region $R=[0.1, 0.9]$. 
+We show the situation after a few iterations and after more iterations.
+On the x-axis, you see the different regions. The range of the lifted iMC is visualised,
+the color indicates which of the three cases above applies for this value range, in comparison with the threshold. 
 ```{code-cell} python      
-:tags: [remove-input]                                                                                                                                                                                                                                                                         
+:tags: [remove-input]
+from stormvogel.parametric.region import plot_annotated_regions_1d                                                                                                                                                                                                                                                                    
 pmc = sv.model.new_dtmc(create_initial_state=False)                                                                                                                        
 x = pmc.declare_parameter("x")                                                                                                                                       
                                                                                                                                                                      
@@ -743,11 +761,15 @@ pmc.set_choices(s3, [(1,     s3)])
 pmc.set_choices(s4, [(1,     s4)])                                                                                                                      
 
 stormvogel.to_dot.plot_model_pydot(pmc)
-threshold = 0.2                                     
-                                                                                                                                                  
+threshold = 0.12             
+solfunc = stormvogel.model_checking(pmc, "P=? [F \"T\"]").at_init()                                                                                                                     
 annotated = parameter_space_partitioning(
-    pmc, f"P<={threshold} [\"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=5
+    pmc, f"P<=0.2 [F \"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=5
 )  
-plot_annotated_regions_1d(annotated, threshold)
+_ = plot_annotated_regions_1d(annotated, threshold, solution_fn=solfunc)
+annotated = parameter_space_partitioning(
+    pmc, f"P<=0.2 [F \"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=20
+)  
+_ = plot_annotated_regions_1d(annotated, threshold, solution_fn=solfunc)
 ```
 ````

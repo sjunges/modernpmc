@@ -83,6 +83,8 @@ def create_mdp_parker():
                         return 3
 
     def _labels(s):
+        if s == 2:
+            return ["s" + str(s), "target"]
         return "s"+str(s)
         
     def _friendly_name(s):
@@ -116,7 +118,7 @@ where
 ````
 
 Additionally, we often assume the existence of a unique _initial state_ $\sinit$.
-Later we extend MDPs with _atomic propositions_, _target states_, and _reward functions_.
+Later, we extend MDPs with _atomic propositions_, _target states_, and _reward functions_.
 
 ````{prf:definition} Enabled actions
 For any state $s$, the set of _enabled actions_ is
@@ -196,8 +198,8 @@ for all paths with the same last state.
 - A policy is _deterministic_ if every distribution $\pi(\xi)$ is Dirac.
 ````
 
-We denote the set of all policies with $\Policies$. 
-We use $\MdPolicies$ for the memoryless deterministic policies and $\RdPolicies$ for the memoryless  (randomising) policies.
+We denote the set of all policies by $\Policies$. 
+We use $\MdPolicies$ for the memoryless deterministic policies and $\MrPolicies$ for the memoryless (randomising) policies.
 Memoryless deterministic policies can be written as
 $
 \pi \colon S \rightarrow A,
@@ -207,7 +209,7 @@ $
 \pi \colon S \rightarrow \Distr{A}.
 $
 
-We furthermore define the set of paths under a policy $\Paths^\pi$ as the set of policies that is consistent with a policy $\pi$. 
+We furthermore define the set of paths under a policy $\Paths^\pi$ as the set of paths that are consistent with a policy $\pi$. 
 
 
 ### Induced Markov Chains
@@ -251,8 +253,8 @@ These two constructions yield equivalent Markov chains
 
 ````{prf:definition}
 def:mdps:generatorinduced
-Given a MDP $\mdp$ and a set of policies $\Pi$, we define $$ \generator{\mdp}{\Pi} = \{ \mdp[\pi] \mid \pi \in Pi \}. $$
-We define $$\generatormd = \generator{\mdp}{\MdPolicies} \text{ and } \generatorrd = \generator{\mdp}{\RdPolicies}$$
+Given an MDP $\mdp$ and a set of policies $\Pi$, we define $$ \generator{\mdp}{\Pi} = \{ \mdp[\pi] \mid \pi \in \Pi \}. $$
+We define $$ \generatormd{\mdp} = \generator{\mdp}{\MdPolicies} \text{ and } \generatormr{\mdp} = \generator{\mdp}{\MrPolicies}$$
 ````
 
 # Reachability probabilities
@@ -263,7 +265,7 @@ $
 $
 denotes the probability of eventually reaching a target state $T$ from a state $s$. 
 The probability $\pr^\pi_\mdp(s \models \lozenge T)$ is defined via the induced MC $\mdp[\pi]$.
-We are mostly interested in this probability from the initial state $\sinit$, in which case we simplify notation 
+We are mostly interested in this probability from the initial state $\sinit$, in which case we simplify notation to
 $\pr^\pi_\mdp(\lozenge T)$.
 
 ```{admonition} Problem: Standard verification problem for reachability probabilities
@@ -290,6 +292,36 @@ Qualitative verification refers to the setting where the threshold $\lambda$ is 
 As we will see, qualitative verification can be solved without reference to the precise probabilities in the MDP.
 Assume fixed $\mdp$ and target set $T$.
 
+````{prf:example} Qualitative verification - running example 
+:label:ex:mdp:qualitative
+Throughout this section, we use the following MDP as a running example.
+```{code-cell} python
+:tags: [remove-input]
+from stormvogel.teaching.qualitative_mdp import spos, sposmin, smaxas, run_and_collect, visualise_iterations
+
+mdp_qual = sv.model.new_mdp()
+s0_q  = mdp_qual.initial_state;  s0_q.set_friendly_name("s0")
+s1_q  = mdp_qual.new_state(friendly_name="s1")
+s2_q  = mdp_qual.new_state(friendly_name="s2")
+s3_q  = mdp_qual.new_state(friendly_name="s3")
+s4_q  = mdp_qual.new_state(friendly_name="s4")
+st_q  = mdp_qual.new_state("target", friendly_name="t")
+sk_q  = mdp_qual.new_state("sink",   friendly_name="sink")
+
+act_a_q = mdp_qual.new_action("a")
+act_b_q = mdp_qual.new_action("b")
+
+s0_q.set_choices({act_a_q: [(1.0, s1_q)],                act_b_q: [(1.0, sk_q)]})
+s1_q.set_choices({act_a_q: [(0.5, st_q), (0.5, s2_q)],   act_b_q: [(1.0, st_q)]})
+s2_q.set_choices({act_a_q: [(1.0, s3_q)],                act_b_q: [(1.0, sk_q)]})
+s3_q.set_choices({act_a_q: [(1.0, st_q)]})
+s4_q.set_choices({act_a_q: [(0.3, st_q), (0.7, sk_q)]})
+mdp_qual.add_self_loops()
+target_states_q = list(mdp_qual.state_labels["target"])
+sv.to_dot.plot_model_pydot(mdp_qual)
+```
+````
+
 ### Possible reachability (max)
 One of the simplest questions we can ask is to find the set of states that can reach the targets with positive probability.
 
@@ -299,11 +331,9 @@ It holds that
 $\Spos = S \setminus \Smaxzero$
 using
 ```{math}
-:enumerated: false
 \Smaxzero = \{ s \mid \exists \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 0 \}.
 ```
 The notation contrasts with $\Szero = \{ \forall \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 0 \}$ where the _minimum_ probability over all policies is zero and which we discuss below.
-
 
 ```{prf:theorem}
 For every state $s$,
@@ -321,14 +351,35 @@ We omit a technical proof of the theorem and focus on the intuition:
 - If there is no such path in the MDP, then a policy cannot make choices that lead to a path in the induced Markov chain.
 
 
-```{attention}
-Discussion that graph reachability is a least fixed point is missing.
+This can be computed as a least fixpoint. Specifically, we define
+
+$$
+\Psi_{{\max}>0}\colon 2^S \rightarrow 2^S
+$$
+such that
+$$
+\Psi_{{\max}>0}(X)=
+\{ s \in S \mid \exists a \in \EnAct{s}.\, \exists s' \in X.\, \delta(s,a)(s') > 0 \} \cup T
+$$
+The operator is monotonic and the lattice is finite.
+
+```{prf:theorem}
+$\lfp{\Psi_{{\max}>0}} = \Spos$.
 ```
+
+````{prf:example}
+Consider @ex:mdp:qualitative.
+Starting from $X_0 = T$, the operator $\Psi_{\max>0}$ adds all states with any action reaching the current set in one step.
+```{code-cell} python
+:tags: [remove-input]
+visualise_iterations(run_and_collect(spos(mdp_qual, target_states_q)), mdp_qual)
+```
+````
 
 ### Possible reachability (min)
 We now study computing
 $$ \Sposmin = \{ \forall \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) > 0 \}, $$
-that is, the complement of $\Szero$. Concretely, we will use that  each policy reaches the target with positive probability iff it has a path to the target of length $n$.
+that is, the complement of $\Szero$. Concretely, we will use that each policy reaches the target with positive probability iff it has a path to the target of length $n$.
 This can be computed as a least fixpoint. Specifically, we define 
 
 $$
@@ -337,23 +388,33 @@ $$
 such that
 $$
 \Psi_{{\min}>0}(X)=
-\{ s \in S \mid \text{for all } a \in \EnAct{s} \exists s' \in T_i. \delta(s,a)(s') > 0  \} \cup T
+\{ s \in S \mid \text{for all } a \in \EnAct{s} \exists s' \in X. \delta(s,a)(s') > 0  \} \cup T
 $$
-The operator is monotonic, the lattice is finite. 
+The operator is monotonic and the lattice is finite. 
 
 ```{prf:theorem}
 $\lfp{\Psi_{{\min}>0}} = \Sposmin$.
 ```
 
+````{prf:example}
+Consider @ex:mdp:qualitative.
+Starting from $X_0 = T$, the operator $\Psi_{\min>0}$ adds states where every action has at least one successor already in the current set.
+```{code-cell} python
+:tags: [remove-input]
+visualise_iterations(run_and_collect(sposmin(mdp_qual, target_states_q)), mdp_qual)
+```
+````
 
 ### Almost-sure reachability (max)
 We are also interested in computing the set of states from which it is possible to ensure that we almost-surely reach the target states.
 
-More formally, we denote this set of state $$\Smaxas = \{ s \mid \exists \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 0 \}.$$
+More formally, we denote this set of states $$\Smaxas = \{ s \mid \exists \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 1 \}.$$
 
-We use a recursive equation to characterize this set. If $s \in T$, then clearly $s \in \Smaxas$. Otherwise, for $s \not \in T$:  $$s \in \Smaxas \text{\quad iff \quad} \exists a \in \EnAct{s}. \forall s' \in \supp{\delta(s,a)}. s' \in \Smaxas. $$
+We use a recursive equation to characterize this set. 
+If $s \in T$, then clearly $s \in \Smaxas$. 
+Otherwise, for $s \not \in T$:  $$s \in \Smaxas \text{\quad iff \quad} \exists a \in \EnAct{s}. \forall s' \in \supp{\delta(s,a)}. s' \in \Smaxas. $$
 
-To compute a the set $\Smaxas$, we want to provide an iterative procedure, which operates on sets of states.
+To compute the set $\Smaxas$, we want to provide an iterative procedure, which operates on sets of states.
 Specifically, we define the operator
 
 $$
@@ -362,7 +423,7 @@ $$
 such that
 $$
 \Psi_{{\max}=1}(X)=
-\{ s \mid
+\{ s \in \Spos \mid
 \exists a\in\EnAct{s}.
 \forall s'\in\supp{\delta(s,a)}.
 s'\in X \}\cup T
@@ -373,11 +434,23 @@ The operator is monotonic, the lattice is finite.
 $\gfp{\Psi_{{\max}=1}} = \Smaxas$.
 ```
 
-```{attention}
-The explicit algorithm discussed in the lecture is still missing.
+Restricting the operator's co-domain to $\Spos$ is essential.
+Without it, $S$ itself is always a fixed point: any non-target state with a self-loop has an action whose only successor is itself, so it is never removed.
+By restricting to $\Spos$, states from which $T$ is unreachable are excluded before the GFP begins.
+
+An equivalent formulation (see @BK08, Algorithm 45) operates at _action_ granularity: actions whose support intersects $S \setminus X$ are removed from the MDP, and a state is only removed once all its actions are gone.
+The two formulations agree because the GFP sequence is decreasing — once an action's successor leaves the current set, the successor never returns — so the set of invalidated actions grows monotonically, exactly as in the action-removal algorithm.
+Our set-based formulation is more concise; the action-removal view is closer to an efficient implementation.
+
+````{prf:example}
+Consider @ex:mdp:qualitative. The GFP starts from $\Spos$ (states that can possibly reach $T$) and removes states that lack any action with all successors inside the current set.
+```{code-cell} python
+:tags: [remove-input]
+visualise_iterations(run_and_collect(smaxas(mdp_qual, target_states_q)), mdp_qual)
 ```
+````
 ### Almost-sure reachability (min)
-Finally, we can also define the set of states $$\Sminas = \{ s \mid \forall \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 0 \}.$$
+Finally, we can also define the set of states $$\Sminas = \{ s \mid \forall \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 1 \}.$$
 
 
 ```{attention}
@@ -432,7 +505,7 @@ These equations are called the Bellman equations _for minimal reachability proba
 :caption: Visualisation of an MDP to illustrate the [Bellman equations for MinReachProb](#thm:bellmaneq:minreachprob). 
 :tags: [remove-input]
 
-vis = sv.show(mdp_parker)
+sv.to_dot.plot_model_pydot(mdp_parker)
 ```
 
 ````{prf:example}
@@ -465,17 +538,17 @@ We observe the following:
 For any MDP and target set $T$:
 1. For any state $s$ it holds that
 $$ \inf_{\pi \in \Policies} \pr^\pi(s \models \lozenge T) = \min_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T). $$
-2. There exist a policy $\pi^{*}$ such that for all $s \in S$:
+2. There exists a policy $\pi^{*}$ such that for all $s \in S$:
 $$ \pr^{\pi^{*}}(s \models \lozenge T) = \min_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T).$$
 ```
-For any solution to the Bellman equations, it simple to extract **a** witnessing memoryless deterministic policy $\pi^{*}$---one simply takes $$\pi^{*}(s) = \argmin_{a} \sum_{s'} \delta(s,a)(s') x_{s'}.$$
-We highlight that there is a unique solution to the Bellman equation, but not a unique minimizing policy. 
+For any solution to the Bellman equations, it is simple to extract **a** witnessing memoryless deterministic policy $\pi^{*}$---one simply takes $$\pi^{*}(s) = \argmin_{a} \sum_{s'} \delta(s,a)(s') x_{s'}.$$
+We highlight that there is a unique solution to the Bellman equation, but not a unique minimising policy. 
 Furthermore, the theorem justifies talking about minimising policies for a target set, but independently of a specific state.
 
 
 
 ### Maximal reachability probability
-While most aspects of computing minimal and maximal reachability probabilities are analogously, the theorem about the Bellman equations differ for both cases.
+While most aspects of computing minimal and maximal reachability probabilities are analogous, the theorems about the Bellman equations differ for both cases.
 ```{prf:theorem} Bellman equations (MaxReachProb)
 :label: thm:bellmaneq:maxreachprob
 Given an MDP with states $S$. Consider variables $x_s$ for each $s \in S$.
@@ -498,7 +571,7 @@ $$
 :caption: Visualisation of an MDP with no unique solution for [Bellman equations for MaxReachProb](#thm:bellmaneq:maxreachprob). 
 :tags: [remove-input]
 
-vis = sv.show(mdp_one)
+sv.to_dot.plot_model_pydot(mdp_one)
 ```
 
 ````{prf:example} 
@@ -524,7 +597,7 @@ In @sec:mecs, these sets of states are called end-components and we show that (r
 For any MDP and target set $T$:
 1. For any state $s$ it holds that
 $$\sup_{\pi \in \Policies} \pr^\pi(\lozenge T) = \max_{\pi \in \MdPolicies} \pr^\pi(\lozenge T) $$
-2. There exist a policy $\pi^{*}$ such that for all $s \in S$:
+2. There exists a policy $\pi^{*}$ such that for all $s \in S$:
 $$ \pr^{\pi^{*}}(s \models \lozenge T) = \min_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T).$$
 ```
 As there is no unique solution to the Bellman equations when maximising, extracting an optimal policy is harder. 
@@ -532,7 +605,7 @@ In particular, while any optimal policy $\pi$ must satisfy $$\pi(s) = \argmax_{a
 ```{prf:example}
 Consider @ex:maxreachprobnotunique. Both actions in $s_0$ will yield value $0.5$.
 ```
-Instead, we must find a policy that makes progress towards to the targets.
+Instead, we must find a policy that makes progress towards the targets.
 ```{attention}
 Content missing.
 ```
@@ -540,7 +613,7 @@ Content missing.
 
 ### The notion of value
 To simplify the exposition, it is customary to merge discussions about minimal and maximal reachability probabilities to a fixed set of target states $T$.
-If we know from context we want to compute the  (minimal or maximal) reachability probability  from state $s$ for a set of target states $T$, we can  call
+If we know from context that we want to compute the (minimal or maximal) reachability probability from state $s$ for a set of target states $T$, we can call
 - the probability induced by a policy _the value of the policy_ (from state $s$),
 - the minimal (resp maximal) probability  from a state $s$ _the value of $s$_,
 - the value of the initial state is the _value of the MDP_.
@@ -554,7 +627,7 @@ Later, we will also use value for other properties, including (discounted or tot
 
 (sec:mecs)=
 ## Maximal end components
-End-components are sub-MDPs -- induced by a set of choices (state-actions pairs) where a policy can visit every state and stay forever.
+End-components are sub-MDPs induced by a set of choices (state-action pairs) where a policy can visit every state and stay forever.
 ```{prf:definition}
 An end-component for an MDP $\mdp = \mdptuple$	is a set $X \subseteq S \times A$ such that:
 - $X$  induces the  submdp  $\mdp[X]  = \langle S', A',  \delta' \rangle$ with 
@@ -571,7 +644,7 @@ For any policy $\pi$ and any state $s$:
 $$ \pr_s^\pi(\{ \xi \in \Paths^\pi(s) \mid \infinite(\xi) \text{ is an EC}   \}) = 1 $$
 ```
 That is, the probability that the choices visited infinitely often from any state onwards form an EC is one. 
-In particular, that means that there are still paths that do not eventually end up in an EC, as there are paths that take any loop infinitely often.
+In particular, this means that there are still paths that do not eventually end up in an EC, as there are paths that take any loop infinitely often.
 
 End-components can overlap and can contain other end-components. 
 It is often helpful to consider __maximal end components__ (MECs): 
@@ -579,8 +652,38 @@ Maximal end components are end components not contained in any end component.
 MECs cannot overlap. 
 MECs can be detected with an efficient graph algorithm @BK08 [Algorithm 47]. 
 
+````{prf:example}
+Consider the MDP with six states shown below.
+```{code-cell} python
+:tags: [remove-input, remove-output]
+import stormvogel.examples as examples
+from stormvogel.stormpy_utils.mec import detect_mecs, eliminate_mecs
+mdp_ec = examples.create_mixed_mec_mdp()
+```
+```{code-cell} python
+:tags: [remove-input]
+sv.to_dot.plot_model_pydot(mdp_ec)
+```
+```{code-cell} python
+:tags: [remove-input]
+mecs = detect_mecs(mdp_ec)
+for i, mec in enumerate(mecs):
+    print(f"MEC {i}: {sorted(s.friendly_name for s in mec)}")
+```
+States $s_1$ and $s_2$ have a cycle, but every action has positive probability of escaping to $s_5$.
+No policy can keep the process inside $\{s_1, s_2\}$ forever, so this set is **not** an end component.
+
+State $s_5$ is absorbing (a self-loop); it forms a _trivial_ MEC.
+
+States $s_3$ and $s_4$ each have a "loop" action that transitions to the other state with probability 1.
+Under the "loop/loop" policy the induced sub-MDP is strongly connected and all transitions remain inside $\{s_3, s_4\}$, so this set is a _non-trivial_ MEC.
+The fact that $s_3$ also has an "escape" action to $s_1$, and $s_4$ a "self" action, does not matter: a policy _exists_ that stays inside forever, and that is sufficient.
+These extra actions also create a nested end-component $\{s_4\}$ under the "self" action alone, which is itself contained in the larger MEC $\{s_3, s_4\}$.
+
+````
+
 (def:mdp:trivialmec)=
-We note that sink-states with their self-loops form are always MECs: We call these _trivial_ MECs.
+We note that sink states with their self-loops are always MECs: We call these _trivial_ MECs.
 
 (def:mdp:mecfree)= 
 Analogously to the notion of an [acyclic MDP](#def:mdp:acyclic),
@@ -602,12 +705,34 @@ The statement indeed follows directly from @thm:finallyendcomponent.
 
 
 (sec:eliminatemecs)=
-### Maximal End-Component elimination
-MDPs can be transformed into a MEC-free MDP while preserving _either_ min or max reachability probabilities for a fixed target. 
+### Maximal End-Component collapsing
+MDPs can be transformed into a MEC-free MDP while preserving _either_ min or max reachability probabilities for a fixed target.
+The transformation is called _MEC collapsing_. We only discuss the MEC collapsing for maximization. 
 
-```{attention}
-Content missing.
+```{prf:definition} MEC collapsing
+:label: def:mec:collapsing
+Given an MDP $\mdp$ with MECs $E_1, \dots, E_k$ and associated state sets $S_1, \dots S_k$ the _collapsed MDP_ $\mdp'$ is obtained by:
+- replacing each non-trivial MEC $E_i$ with a single representative state $\hat{E}_i$ carrying the union of labels of all states in $S_i$,
+- redirecting every transition into any state in $S_i$ to $\hat{E}_i$, and
+- For $\hat{E}_i$, add all choices that leave the MEC, i.e., for any $s \in S_i$ with $(s,a) \not\in E_i$, we add a new choice $(\hat{E}_i, a_s) = \delta(s,a)$.  
+States outside any non-trivial MEC are unchanged.
 ```
+The intuition behind the new actions $s_a$ leaving the representative of a MEC is 
+that a policy can choose any (weighted combination) of the original state-action pairs to leave the MEC.
+```{prf:theorem}
+For any target set $T$ and any state $s$ not inside a non-trivial MEC, the maximal reachability probabilities $\pr^{\max}(s \models \lozenge T)$ are preserved by MEC collapsing.
+```
+````{prf:example}
+We collapse the end components of the MDP from the previous example.
+```{code-cell} python
+:tags: [remove-input]
+mdp_collapsed, state_map = eliminate_mecs(mdp_ec, remove_representative_selfloops=False)
+sv.to_dot.plot_model_pydot(mdp_collapsed)
+```
+The non-trivial MEC $\{s_3, s_4\}$ is merged into one representative state.
+The trivial MEC $\{s_5\}$ and the non-MEC states $s_0$, $s_1$, $s_2$ are preserved unchanged.
+````
+
 
 # Algorithms for reachability probabilities
 
@@ -617,124 +742,41 @@ We note, however, that this is exponential in the number of states and therefore
 
 ## Policy iteration
 
-[//]: # (Policy iteration avoids the naive enumeration by constantly picking policies that improve upon the previous policy. )
+Policy iteration (PI) avoids the exponential cost of policy enumeration.
+Starting from an initial policy $\pi_0$, it alternates between two steps until $\pi_i = \pi_{i+1}$:
 
-[//]: # (We start with some initial policy $\pi_0$, alternate between two steps until $\pi_{i} = \pi_{i+1}$.)
+- **Policy evaluation**: compute $V^{\pi_i}$ by solving the linear system of equations induced by $\pi_i$.
+- **Policy improvement**: set
+  $$\pi_{i+1}(s) = \argmax_a \sum_{s'} \delta(s,a)(s') \cdot V^{\pi_i}(s'),$$
+  updating an action only if it yields a strict improvement (replace $\argmax$ by $\argmin$ for minimisation).
 
-[//]: # (- Evaluate $V^{\pi_i}$)
-
-[//]: # (- Set $\pi_{i+1}$ using $$ \pi_{i+1}&#40;s&#41; = \arg\max _{a} \sum_{s'} \delta&#40;s,a&#41;&#40;s'&#41; V^{\pi_i}&#40;s&#41; $$ and only change the action if it is a strict improvement!)
-
-[//]: # ()
-[//]: # (When maximising, any initial policy will do. When minimising, the initial policy must be _proper_. )
-
-[//]: # ()
-[//]: # ( ````{prf:example}                           )
-
-[//]: # (  :label: ex:pi:minreachparker                                                                                                                                    )
-
-[//]: # (                                                                                                                                                                )
-[//]: # (  We run policy iteration for minimal reachability probability on @fig:mdpparkervis                                                                              )
-
-[//]: # (  with $s_2$ as the target.               )
-
-[//]: # (                                                                                                                                                                  )
-[//]: # (  ```{code-cell} python                                                                                                                                           )
-
-[//]: # (  from stormvogel.teaching.policy_iteration import PI, initial_scheduler, visualise_pi_iterations                                                                 )
-
-[//]: # (                                                                                                                                                                  )
-[//]: # (  s2_parker = mdp_parker.get_states_with_label&#40;"s2"&#41;.pop&#40;&#41;                                                                                                      )
-
-[//]: # (  sched0 = initial_scheduler&#40;mdp_parker, one_states=[s2_parker], minimize=True&#41;                                                                                   )
-
-[//]: # (  pi = PI&#40;mdp_parker, sched0, one_states=[s2_parker], minimize=True&#41;                                                                                              )
-
-[//]: # (  visualise_pi_iterations&#40;pi&#41;             )
-
-[//]: # (  ```)
-
-[//]: # (                                                                                                                                                             )
-[//]: # (  PI converges in two steps. In step 0 the pessimistic initial scheduler sends $s_0$                                                                              )
-
-[//]: # (  to $s_1$ &#40;action $b$&#41;, yielding value 1; improvement then switches $s_0$ to action $a$.)
-
-[//]: # (  In step 1 the new scheduler is evaluated to give the minimal reachability probabilities,                                                                        )
-
-[//]: # (  and no further improvement is possible.                                                                                                                         )
-
-[//]: # (  ````                                                                                                                                                           )
-
-[//]: # (                          )
-[//]: # (                                                                                                                                                                      )
-[//]: # (  ````{prf:example}                                                                                                                                                  )
-
-[//]: # (  :label: ex:pi:improper                                                                                                                                               )
-
-[//]: # (                                          )
-[//]: # (  We demonstrate that PI requires a proper initial policy to find the *minimal*                                                                                        )
-
-[//]: # (  reachability probability. We use the optimistic scheduler &#40;which would be                                                                                            )
-
-[//]: # (  correct for maximisation&#41; as a starting point for a minimisation run.)
-
-[//]: # (                                                                                                                                                                       )
-[//]: # (  ```{code-cell} python                                                                                                                                                )
-
-[//]: # (  from stormvogel.teaching.policy_iteration import PI, initial_scheduler, visualise_pi_iterations                                                                      )
-
-[//]: # (                                                                                                                                                                                                                                                                              )
-[//]: # (  # Optimistic start: each state picks the action with the highest one-step)
-
-[//]: # (  # probability of reaching s2.  For s3 that is action a &#40;prob 1 to s2&#41;.                                                                                               )
-
-[//]: # (  bad_sched = initial_scheduler&#40;mdp_parker, one_states=[s2_parker], minimize=False&#41;                                                                                    )
-
-[//]: # (  pi_bad = PI&#40;mdp_parker, bad_sched, one_states=[s2_parker], minimize=True&#41;)
-
-[//]: # (  visualise_pi_iterations&#40;pi_bad&#41;                                                                                                                                      )
-
-[//]: # (  ```                                                                                                                                                                  )
-
-[//]: # (                                                                                                                                                                                )
-[//]: # (  PI terminates after a single step with all values equal to 1 — which is the                                                                                          )
-
-[//]: # (  *maximal* reachability probability, not the minimal one.  The culprit is $s_3$:                                                                                      )
-
-[//]: # (  under action $a$ it moves directly to $s_2$, so the induced DTMC assigns                                                                                           )
-
-[//]: # (  $V&#40;s_3&#41; = 1$.  When we try to improve, action $b$ &#40;self-loop&#41; also has                                                                                               )
-
-[//]: # (  expected value $1 \cdot V&#40;s_3&#41; = 1$, so no strict improvement is possible and                                                                                      )
-
-[//]: # (  PI gets stuck at this spurious fixed point.                                                                                                                          )
-
-[//]: # (                                                                                                                                                                       )
-[//]: # (  The fix is a *pessimistic* initial policy that steers away from the target,                                                                                          )
-
-[//]: # (  forcing zero states to be detected correctly:                                                                                                                        )
-
-[//]: # (                                                                                                                                                                       )
-[//]: # (  ```{code-cell} python                                                                                                                                                )
-
-[//]: # (  good_sched = initial_scheduler&#40;mdp_parker, one_states=[s2_parker], minimize=True&#41;                                                                                  )
-
-[//]: # (  pi_good = PI&#40;mdp_parker, good_sched, one_states=[s2_parker], minimize=True&#41;                                                                                          )
-
-[//]: # (  visualise_pi_iterations&#40;pi_good&#41;                                                                                                                                   )
-
-[//]: # (  ```                                                                                                                                                                  )
-
-[//]: # (                                                                                                                                                                       )
-[//]: # (  Now $s_3$ starts with action $b$ &#40;self-loop&#41;, its value is correctly identified)
-
-[//]: # (  as 0, and the second step finds the true minimal reachability probabilities.  )
-
-[//]: # (  ````                                                      )
-
-```{attention}
-All content here is still missing. 
+For maximisation, any initial policy suffices.
+For minimisation, care is needed: a state $s \in S \setminus \Sposmin$ has minimum reachability probability 0, but a naive initial policy may assign it a positive value and cause PI to diverge.
+The fix is to start from a *proper* initial policy: for each $s \in S \setminus \Sposmin$, pick an action whose support stays within $S \setminus \Sposmin$.
+Such an action always exists: $s \notin \Sposmin$ means exactly that some action has no successor in $\Sposmin$ (by the fixpoint characterisation of $\Psi_{\min>0}$).
+Under a proper initial policy, $S \setminus \Sposmin$ is an absorbing set; policy evaluation naturally assigns those states value 0, and no improvement step ever moves out of that set.
+```{prf:theorem}
+Policy iteration terminates after finitely many steps and the resulting policy is optimal.
 ```
+
+````{prf:example}
+:label: ex:pi:minreachparker
+We run policy iteration for minimal reachability probability on @fig:mdpparkervis with $s_2$ as the target.
+```{code-cell} python
+from stormvogel.teaching.policy_iteration import PI, visualise_pi_iterations
+
+pi = PI(mdp_parker, "target", minimize=True)
+visualise_pi_iterations(pi)
+```
+PI converges in two steps.
+The proper initial policy sends $s_3$ to action $b$ (self-loop within $S \setminus \Sposmin$), fixing its value to 0.
+In step 0, $s_0$ takes action $b$ (pessimistic: goes to $s_1$), yielding value 1; improvement then switches $s_0$ to action $a$.
+In step 1 the new scheduler is evaluated to give the exact minimal reachability probabilities, and no further improvement is possible.
+````
+```{prf:remark}
+Note that the discussion above assumes exact solving of the induced DTMC. Any non-exact solver breaks _all_ guarantees about the correctness of PI.
+```
+
 
 ## Linear programming
 The next algorithm simply reduces the problem of computing reachability probabilities into a linear programming problem. 
@@ -750,13 +792,13 @@ a linear program is of the form:
 		& a_{m1} \cdot x_1 + a_{m2}  \cdot x_2 + \dots a_{mn} \cdot x_n \leq b_m
 \end{align*}
 ```
-We can support minimization and $\geq$ by adequately negating constants.
-Linear programming is supported by a rich theory. Here, it is important to note that linear programming admits for polynomial time solutions and there is very mature (academic and commercial) tool support for solving linear programs.
+We can support minimisation and $\geq$ by adequately negating constants.
+Linear programming is supported by a rich theory. Here, it is important to note that linear programming admits polynomial-time solutions and there is very mature (academic and commercial) tool support for solving linear programs.
 
 ### Reduction
 We again consider first the minimal reachability probability and then the maximal reachability probability.
 #### Minimal reachability probabilities
-The essence of the [Bellman equations](#thm:bellmaneq:minreachprob) is that in every state, we can pick a minimizing action.
+The essence of the [Bellman equations](#thm:bellmaneq:minreachprob) is that in every state, we can pick a minimising action.
 We translate that and say that the value of a state must be smaller than the value induced by any action. It is thus necessarily at most the value of the minimal action.
 We then maximise the value of every state to ensure that we meet the solution. 
 ```{prf:theorem} 
@@ -768,7 +810,13 @@ The minimal reachability probability is the unique solution to the following LP 
 	  & x_s \geq \sum_{s'} \delta(s,a)(s')x_{s'} & & \text{for all other $s$ and all $a\in \EnAct{s}$}
 \end{align*}
 ```
-The linear program has a unique solution which matches the solution we want. 
+````{prf:example}
+```{code-cell} python
+:tags: [remove-input]
+from stormvogel.teaching.lp import lp_minreachprob
+lp_minreachprob(mdp_parker, "s2")
+```
+````
 
 #### Maximal reachability probabilities
 The adaptions are straightforward. What is notable is that the [Bellman equations](#thm:bellmaneq:maxreachprob) require that we find the smallest solution, which we do by minimising here.
@@ -781,6 +829,13 @@ The maximal reachability probability is the unique solution to the following LP 
 	  & x_s \geq \sum_{s'} \delta(s,a)(s')x_{s'} & & \text{for all other $s$ and all $a\in \EnAct{s}$}
 \end{align*}
 ```
+````{prf:example}
+```{code-cell} python
+:tags: [remove-input]
+from stormvogel.teaching.lp import lp_maxreachprob
+lp_maxreachprob(mdp_parker, "s2")
+```
+````
 
 ### Consequences of the LP reduction
 From the fact that linear programming can be solved in polynomial time, we get the following important consequence.
@@ -869,9 +924,9 @@ $$\Phi(V^{\min}) = V^{\min}.$$
 ```
 
 #### Value iteration algorithm
-The essence of value iteration is thus to start with $F \gets \mathbf{0}$ and iterate until termination condition some $F \gets \Phi(F)$.
+The essence of value iteration is thus to start with $F \gets \mathbf{0}$ and repeatedly apply $F \gets \Phi(F)$ until some termination condition is met.
 The problem is that we may not reach the fixpoint (the $n$-step reachability may always be smaller than the unbounded reachability).
-What we realistically hope achieve is $$|F - V^{*}| \leq \mathbf{\epsilon} \quad \text{(pointwise)}$$.
+What we realistically hope to achieve is $$|F - V^{*}| \leq \mathbf{\epsilon} \quad \text{(pointwise)}$$.
 
 ````{prf:example}
 Consider the Bellman operator from @ex:bellmanop:minreachparker.
@@ -891,15 +946,32 @@ bellman.visualise_iterations(results, background_gradient="viridis")
 ```
 ````
 
-```{attention}
-Content is still missing.  
-```
+A natural stopping criterion for VI is to halt when successive iterates differ by at most $\varepsilon$ pointwise, i.e.\ $\|\Phi^{n+1}(\mathbf{0}) - \Phi^n(\mathbf{0})\|_\infty \leq \varepsilon$.
+Unfortunately, this _local_ near-convergence does not imply that the current iterate is within $\varepsilon$ of $V^{\min}$.
+For MDPs with end components the gap between $\Phi^n(\mathbf{0})$ and $V^{\min}$ can remain arbitrarily large even when successive iterates are indistinguishable @DBLP:journals/tcs/HaddadM18.
+Concretely, the lower sequence $\Phi^n(\mathbf{0})$ may converge to a value strictly below $V^{\min}$ at every finite step, with the true value only reached in the limit.
+Stopping early therefore yields a systematic underestimate with no bound on the error.
 
 #### Interval iteration algorithm
 
-```{attention}
-Content is still missing.  
+Rather than relying on local near-convergence, _interval iteration_ (IVI) runs two VI sequences simultaneously: one from $\mathbf{0}$ (lower bound) and one from $\mathbf{1}$ (upper bound).
+Because the fixpoint is unique, both sequences converge to $V^{\min}$, and the gap between them shrinks monotonically.
+When lower and upper agree within tolerance $\varepsilon$, we have a guaranteed $\varepsilon$-approximation.
+
+````{prf:example}
+We run interval iteration on the Parker MDP for minimal reachability probabilities.
+```{code-cell} python
+:tags: [remove-input]
+ivi = bellman.IVI(
+    bellman.VI(operator, bellman.zero_value(mdp_parker)),
+    bellman.VI(operator, bellman.one_value(mdp_parker)),
+)
+results = [ivi.step() for _ in range(8)]
+bellman.visualise_iterations(results)
 ```
+Each cell shows a `(lower, upper)` pair.
+The bounds tighten with each step and converge to the same values as standard VI.
+````
 
 
 
@@ -934,9 +1006,44 @@ In contrast to the minimal reachability probability, it is important how we init
 The simple interval iteration therefore also does not converge and one must ensure that we converge against the least fixed point. 
 The standard way to ensure this is by [eliminating maximal end components](#sec:eliminatemecs). 
 
-```{attention}
-Examples are still missing.  
+````{prf:example}
+We run interval iteration on the MDP from the MEC example (see @sec:mecs), computing the maximum probability of reaching $s_2$ (labeled $\mathit{target}$).
+```{code-cell} python
+:tags: [remove-input, remove-output]
+mdp_mec = examples.create_mixed_mec_mdp()
+op_mec = bellman.make_operator_maxreachprob(mdp_mec, "target")
+ivi_mec = bellman.IVI(
+    bellman.VI(op_mec, bellman.zero_value(mdp_mec)),
+    bellman.VI(op_mec, bellman.one_value(mdp_mec)),
+)
+results_mec = [ivi_mec.step() for _ in range(8)]
 ```
+```{code-cell} python
+:tags: [remove-input]
+bellman.visualise_iterations(results_mec)
+```
+The lower bounds for $s_3$ and $s_4$ converge to $0.7$ (the true value, reached via the escape action), but the upper bounds remain stuck at $1.0$.
+They support each other: the Bellman update for $s_3$ sees $\max(\text{escape} \to 0.7,\; \text{loop} \to V(s_4) = 1)= 1$, and symmetrically for $s_4$.
+The gap never closes.
+
+After MEC collapsing (with the representative self-loop removed so the upper bound can descend), the equations have a unique fixed point and IVI converges:
+```{code-cell} python
+:tags: [remove-input, remove-output]
+from stormvogel.stormpy_utils.mec import eliminate_mecs
+mdp_col, _ = eliminate_mecs(mdp_mec, remove_representative_selfloops=True)
+op_col = bellman.make_operator_maxreachprob(mdp_col, "target")
+ivi_col = bellman.IVI(
+    bellman.VI(op_col, bellman.zero_value(mdp_col)),
+    bellman.VI(op_col, bellman.one_value(mdp_col)),
+)
+results_col = [ivi_col.step() for _ in range(6)]
+```
+```{code-cell} python
+:tags: [remove-input]
+bellman.visualise_iterations(results_col)
+```
+Both bounds meet by iteration 4.
+````
 ## Dynamic programming
 We briefly discuss a dynamic programming approach for [acyclic MDPs](#def:mdp:acyclic). Note that by definition, acyclic MDPs are also MEC-free. 
 We therefore only discuss the minimal reachability probability case here, the maximal reachability probabilities can be computed exactly analogously. 
@@ -966,7 +1073,7 @@ Computing (minimal or maximal) reachability probabilities in acyclic MDPs can be
 
 ## Combining methods
 Beyond the three main families of algorithms, one can combine different algorithms.
-The most relevant one is VI2PI: First VI, then PI. This yields the speed of VI (?!) and ensure an exact result with PI. 
+The most relevant one is VI2PI: First VI, then PI. This yields the speed of VI (?!) and ensures an exact result with PI. 
 
 
 
@@ -1117,7 +1224,7 @@ We start in a state encoding that have made zero steps so far.
 If a target state is visited in the MDP, we go to an absorbing and accepting state. 
 Otherwise, we go from the state encoding $i$ steps so far to $i+1$ steps so far.
 The state encoding $h+1$ steps is absorbing and should be interpreted as having exceeded the horizon.
-Step-bounded properties can be generalized to [cost-bounded properties](#sec:costbounded).
+Step-bounded properties can be generalised to [cost-bounded properties](#sec:costbounded).
 
 
 ## Büchi properties
@@ -1225,7 +1332,7 @@ $$
 ```
 
 ### Maximal expected reachability rewards
-For MDPs, we can study reachability rewards under a minimizing or a maximizing policy. We write $\mathbb{E}^{\pi}(\lozenge T)$ for the expected reward in the Markov chain induced by $\pi$.
+For MDPs, we can study reachability rewards under a minimising or a maximizing policy. We write $\mathbb{E}^{\pi}(\lozenge T)$ for the expected reward in the Markov chain induced by $\pi$.
 We start with maximal expected rewards. As before, we definite the maximal expected reward as
 $$\mathbb{E}^{\max}(\lozenge T)  = \sup_{\pi \in \Policies} \mathbb{E}^{\pi}(\lozenge T). $$
 Below, we follow the exposure in @DBLP:conf/tacas/ChatterjeeQSWWZ25 [Section 5].
