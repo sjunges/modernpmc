@@ -134,10 +134,10 @@ $\langle s,a \rangle$ where $a \in \EnAct{s}$.
 Markov chains are MDPs with exactly one choice per state. We can then omit actions and write 
 a Markov chain as a tuple $\langle S, \delta \rangle$, potentially extended by initial states.
 
-For any choice $\langle s,a\rangle$ we may write $\delta(s,a,s')$ to denote $\delta(s,a)(s')$.
+For any choice $\langle s,a\rangle$, we may write $\delta(s,a,s')$ to denote $\delta(s,a)(s')$.
 
 ```{warning} Assumptions
-Unless stated otherwise we assume
+Unless stated otherwise, we assume
 
 - $S$ and $A$ are finite,
 - there are no _deadlocks_: $\EnAct{s} \neq \emptyset$, and
@@ -163,7 +163,7 @@ we write $\last{\xi}$ for the final state $s_n$.
 
 For an infinite path
 $
-\xi = s_0 a_0 s_1 a_1 s_2 \dots
+\xi = s_0 a_0 s_1 a_1 s_2 \dots,
 $
 we define $$ \infinite{\xi} = \{ \langle s, a \rangle  \mid |\{ i \mid \langle s_i, a_i \rangle = \langle s, a \rangle \}| = \infty \} $$
 as the choices that are made infinitely often along a path.
@@ -176,7 +176,7 @@ A _sink state_ is a state $s$ with $\delta(s,a)(s) = 1$ for all $a \in \EnAct{s}
 An MDP is _acyclic_ if along every infinite path, the only states visited infinitely often are sink states.
 
 ### Policies
-Policies resolve nondeterminism
+Policies resolve nondeterminism.
 ```{note}
 In the literature, different words are used. In the classical model checking literature, the word _scheduler_ is preferred, 
 in game theory, the word _strategy_ is preferred, and in control theory, policies are often called _controllers_.
@@ -235,7 +235,7 @@ with
 ```{prf:remark} Infinite Markov chain
 The above Markov chain is infinite, but reachability probabilities remain well defined.
 ```
-It is useful to consider a special case for memoryless (possibly randomised) policies
+It is useful to consider a special case for memoryless (possibly randomised) policies.
 `````{prf:definition} Induced Markov chain (memoryless policies)
 For a memoryless policy $\pi$, the induced Markov chain is $\mdp[\pi] =
 \langle S , \delta^\pi \rangle$
@@ -269,7 +269,7 @@ We are mostly interested in this probability from the initial state $\sinit$, in
 $\pr^\pi_\mdp(\lozenge T)$.
 
 ```{admonition} Problem: Standard verification problem for reachability probabilities
-Given MDP $\mdp$, a _threshold_ $\lambda \in \mathbb{Q}$  and $\bowtie \in \{\leq,\geq\}$, decide whether
+Given MDP $\mdp$, a _threshold_ $\lambda \in \mathbb{Q}$ and $\bowtie \in \{\leq,\geq\}$, decide whether
 
 $$
 \pr^\pi_\mdp(\lozenge T) \bowtie \lambda
@@ -410,7 +410,7 @@ We are also interested in computing the set of states from which it is possible 
 
 More formally, we denote this set of states $$\Smaxas = \{ s \mid \exists \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 1 \}.$$
 
-We use a recursive equation to characterize this set. 
+We use a recursive equation to characterise this set. 
 If $s \in T$, then clearly $s \in \Smaxas$. 
 Otherwise, for $s \not \in T$:  $$s \in \Smaxas \text{\quad iff \quad} \exists a \in \EnAct{s}. \forall s' \in \supp{\delta(s,a)}. s' \in \Smaxas. $$
 
@@ -428,7 +428,7 @@ $$
 \forall s'\in\supp{\delta(s,a)}.
 s'\in X \}\cup T
 $$
-The operator is monotonic, the lattice is finite. 
+The operator is monotonic and the lattice is finite. 
 
 ```{prf:theorem}
 $\gfp{\Psi_{{\max}=1}} = \Smaxas$.
@@ -542,7 +542,7 @@ $$ \inf_{\pi \in \Policies} \pr^\pi(s \models \lozenge T) = \min_{\pi \in \MdPol
 $$ \pr^{\pi^{*}}(s \models \lozenge T) = \min_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T).$$
 ```
 For any solution to the Bellman equations, it is simple to extract **a** witnessing memoryless deterministic policy $\pi^{*}$---one simply takes $$\pi^{*}(s) = \argmin_{a} \sum_{s'} \delta(s,a)(s') x_{s'}.$$
-We highlight that there is a unique solution to the Bellman equation, but not a unique minimising policy. 
+We highlight that there is a unique solution to the Bellman equations, but not a unique minimising policy. 
 Furthermore, the theorem justifies talking about minimising policies for a target set, but independently of a specific state.
 
 
@@ -615,9 +615,9 @@ Content missing.
 To simplify the exposition, it is customary to merge discussions about minimal and maximal reachability probabilities to a fixed set of target states $T$.
 If we know from context that we want to compute the (minimal or maximal) reachability probability from state $s$ for a set of target states $T$, we can call
 - the probability induced by a policy _the value of the policy_ (from state $s$),
-- the minimal (resp maximal) probability  from a state $s$ _the value of $s$_,
+- the minimal (resp. maximal) probability from a state $s$ _the value of $s$_,
 - the value of the initial state is the _value of the MDP_.
-- We use $V^\pi_\mdp(s)$ to define the value induced by a policy and  $V^{*}_\mdp(s)$ to define the value of a state. We omit $\mdp$ whenever possible.
+- We use $V^\pi_\mdp(s)$ to define the value induced by a policy and $V^{*}_\mdp(s)$ to define the value of a state. We omit $\mdp$ whenever possible.
 ```{danger} Implicit notation
 The use of values of MDPs etc is always contextual, and this is never clear from the notation. We sometimes write $V^{min}$ or $V^{max}$ instead of $V^{*}$ to be more explicit.
 ```
@@ -690,7 +690,7 @@ Analogously to the notion of an [acyclic MDP](#def:mdp:acyclic),
 we call an MDP _MEC-free_, if all MECs are [trivial](#def:mdp:trivialmec).
 
 ```{note}
-Importantly, a MEC-free MDP has MECs, just like an acyclic MDP has cycles.
+Importantly, an MEC-free MDP has MECs, just like an acyclic MDP has cycles.
 ```
 
 ```{prf:theorem} 
@@ -707,7 +707,7 @@ The statement indeed follows directly from @thm:finallyendcomponent.
 (sec:eliminatemecs)=
 ### Maximal End-Component collapsing
 MDPs can be transformed into a MEC-free MDP while preserving _either_ min or max reachability probabilities for a fixed target.
-The transformation is called _MEC collapsing_. We only discuss the MEC collapsing for maximization. 
+The transformation is called _MEC collapsing_. We only discuss the MEC collapsing for maximising. 
 
 ```{prf:definition} MEC collapsing
 :label: def:mec:collapsing
@@ -718,7 +718,7 @@ Given an MDP $\mdp$ with MECs $E_1, \dots, E_k$ and associated state sets $S_1, 
 States outside any non-trivial MEC are unchanged.
 ```
 The intuition behind the new actions $s_a$ leaving the representative of a MEC is 
-that a policy can choose any (weighted combination) of the original state-action pairs to leave the MEC.
+that a policy can choose any (weighted combination) of the original state-action pairs to leave an MEC.
 ```{prf:theorem}
 For any target set $T$ and any state $s$ not inside a non-trivial MEC, the maximal reachability probabilities $\pr^{\max}(s \models \lozenge T)$ are preserved by MEC collapsing.
 ```
@@ -779,11 +779,11 @@ Note that the discussion above assumes exact solving of the induced DTMC. Any no
 
 
 ## Linear programming
-The next algorithm simply reduces the problem of computing reachability probabilities into a linear programming problem. 
+The next algorithm simply reduces the problem of computing reachability probabilities to a linear programming problem. 
 ### Short recap
-Linear programming refers to an optimization problem (a mathematical program) of a particular form.
+Linear programming refers to an optimisation problem (a mathematical program) of a particular form.
 ```{prf:definition} Linear programming
-Given $n$ real-values variables $x_1, \dots, x_n$  and constants $a_{ij}$, $b_i$, $c_j$, with $1 \leq i \leq m$ and $1 \leq j \leq n$, 
+Given $n$ real-valued variables $x_1, \dots, x_n$  and constants $a_{ij}$, $b_i$, $c_j$, with $1 \leq i \leq m$ and $1 \leq j \leq n$, 
 a linear program is of the form:
 \begin{align*}  \text{Maximize}\quad & c_1 \cdot x_1 + \dots c_n \cdot x_n \\
  & \text{such that } \\
@@ -853,11 +853,11 @@ As such, the idea is similar to computing the set of reachable states by iterati
 However, while in the qualitative case we reason about sets of states, now we must reason about the reachability probability per state.
 More formally, we move from the [lattice](#def:lattice) $(2^S, \subseteq)$ where $2^S$ denotes the powerset on $S$ to the lattice $([0,1]^S, \preceq)$ where $\preceq$ denotes pointwise inequality.
 ```{note} Notation
-Strictly, $2^S$ denotes the functions from $S$ to $\{ 0, 1 \}$, i.e., functions that determines membership for every state.
+Strictly, $2^S$ denotes the functions from $S$ to $\{ 0, 1 \}$, i.e., functions that determine membership for every state.
 Likewise, $[0,1]^S$ denotes the functions from $S$ to $[0,1]$, i.e., functions that assign a probability to every state. Assuming a total order on states, $[0,1]^S$ can be interpreted as $|S|$-dimensional vectors, which is also convenient in examples.
 ```
 To formally describe the iterative update of the reachability probabilities, we use _Bellman operators_. 
-Where _Bellman equations_ describe the optimal solution, the Bellman operators are formal [operators](#app:fixpointoperators) describe an update of values. 
+Where _Bellman equations_ describe the optimal solution, the Bellman operators are formal [operators](#app:fixpointoperators) that describe an update of values. 
 We first present the operator for the minimal reachability probabilities, and then for maximal reachability probabilities.
 
 ### Minimal reachability probabilities
@@ -881,7 +881,7 @@ Recall the Bellman equations from @ex:bellman:minreachparker. We now show the Be
 equations = bellman.minreachprob(mdp_parker, "s2", operator=True)
 Math(r"\\".join([sympy.latex(eq) for eq in equations]))
 ```
-Let us execute the Bellman operator, maybe first on the bottom element of the lattice, which assigns every state to zero.
+Let us execute the Bellman operator, maybe first on the bottom element of the lattice, which assigns zero to every state.
 ```{code-cell} python
 :tags: [remove-input]
 operator = bellman.make_operator_minreachprob(mdp_parker, "s2")
@@ -1001,8 +1001,8 @@ $$\Phi(V^{\max}) = V^{\max}.$$
 - $\Phi^n(\mathbf{0}) \leq V^{\max}$ for all $n$.
 ```
 
-The application of value iteration is therefore similar as before. Iterating from $\mathbf{0}$ yields a correct result. 
-In contrast to the minimal reachability probability, it is important how we initialize the value iteration as there are multiple fixpoints.
+The application of value iteration is therefore similar to before. Iterating from $\mathbf{0}$ yields a correct result. 
+In contrast to the minimal reachability probability, it is important how we initialise the value iteration as there are multiple fixpoints.
 The simple interval iteration therefore also does not converge and one must ensure that we converge against the least fixed point. 
 The standard way to ensure this is by [eliminating maximal end components](#sec:eliminatemecs). 
 
@@ -1046,7 +1046,7 @@ Both bounds meet by iteration 4.
 ````
 ## Dynamic programming
 We briefly discuss a dynamic programming approach for [acyclic MDPs](#def:mdp:acyclic). Note that by definition, acyclic MDPs are also MEC-free. 
-We therefore only discuss the minimal reachability probability case here, the maximal reachability probabilities can be computed exactly analogously. 
+We therefore only discuss the minimal reachability probability case here; the maximal reachability probabilities can be computed exactly analogously. 
 First, let us note that on acyclic models, VI terminates with the exact solution after $h$ steps, where $h$ is the length of the longest path to a sink state (without looping in the sink states).
 This yields a quadratic run time for value iteration. By using dynamic programming, we can reduce the quadratic run time to a linear run time.
 
@@ -1054,7 +1054,7 @@ In particular, if we sort the MDP topologically (i.e., by ascending distance to 
 the following dynamic programming scheme yields the correct solution.
 
 ````{prf:algorithm}
-**Inputs** A bellman operator and topologically sorted states $\mathsf{sorted}(S)$.
+**Inputs** A Bellman operator and topologically sorted states $\mathsf{sorted}(S)$.
 
 **Outputs** The least fixed point of that operator.
 
@@ -1079,7 +1079,7 @@ The most relevant one is VI2PI: First VI, then PI. This yields the speed of VI (
 
 # From reachability to temporal properties (and back)
 So far, our exposition focussed exclusively on reachability probabilities. 
-In particular, we categorized paths as good or bad, solely depending on whether these paths visit a particular state.
+In particular, we categorised paths as good or bad, solely depending on whether these paths visit a particular state.
 In this section, we support more general properties on paths.
 
 ## DFA properties
@@ -1126,10 +1126,10 @@ dfa.plot_symbolic_dfa_pydot(aut)
 ```
 ````
 
-To formalize what we want, we first lift paths to traces over these executions:
+To formalise what we want, we first lift paths to traces over these executions:
 
 (def:mdp:aptrace)=
-The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$ \aptrace(\xi) = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
+The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$ \aptrace{\xi} = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
 The set of all $\AP$-traces is called $\ApTrace$.
 
 In a Markov chain, we can easily lift the probability of a path to the probability of a trace:
@@ -1218,9 +1218,9 @@ dfa.plot_symbolic_dfa_pydot(aut)
 ````
 
 #### Step-bounded properties
-In a _step-bounded_ property with horizon $h$ asks for reaching a target state within $h$ steps.
-A DFA for this property contains of $h+2$ states: 
-We start in a state encoding that have made zero steps so far. 
+A _step-bounded_ property with horizon $h$ asks for reaching a target state within $h$ steps.
+A DFA for this property consists of $h+2$ states: 
+We start in a state encoding that has made zero steps so far. 
 If a target state is visited in the MDP, we go to an absorbing and accepting state. 
 Otherwise, we go from the state encoding $i$ steps so far to $i+1$ steps so far.
 The state encoding $h+1$ steps is absorbing and should be interpreted as having exceeded the horizon.
@@ -1228,7 +1228,7 @@ Step-bounded properties can be generalised to [cost-bounded properties](#sec:cos
 
 
 ## Büchi properties
-Reachability and DFA properties consider paths up to a some (indefinite) horizon. 
+Reachability and DFA properties consider paths up to some (indefinite) horizon. 
 Instead, in Büchi properties, we consider infinite paths.
 Essentially, Büchi properties ask that a set of (target) states are visited infinitely often along a path. 
 ```{prf:remark}
@@ -1251,20 +1251,23 @@ Every successor state of that choice must also be visited infinitely often, and 
 This ascending set then stabilises with a strongly connected component where a policy can stay forever, i.e., an EC.
 
 ```{prf:definition}
-An EC satisfies a B\"uchi property $\varphi$ if it contains a target state. 
+An EC satisfies a Büchi property $\varphi$ if it contains a target state. 
 ```
 We justify this wording by remarking that a policy can choose to visit any state in an EC infinitely often. In particular, such a policy can thus satisfy $\varphi$.
 
 ```{prf:theorem} 
 - Let $U_\varphi$ be the union of all $S'$ in an EC that satisfies the Büchi property $\varphi$. 	
-- Let $V_\varphi$ be the union of all $S'$ in an EC that does not satisfies the Büchi property $\varphi$.
+- Let $V_\varphi$ be the union of all $S'$ in an EC that does not satisfy the Büchi property $\varphi$.
 Then:
 1. $\pr^{\max}(\varphi) = \pr^{\max}(\lozenge U_\varphi)$
 2. $\pr^{\min}(\varphi) = 1 - \pr^{\max}(\lozenge V_\varphi)$.	
 ```
 The theorem above gives rise to a (naive) algorithm: Compute all ECs, classify each EC as satisfying or not satisfying, and then solve a reachability probability problem. 
-Note that such an algorithm is not efficient, as there are exponentially many ECs. However, careful graph algorithms avoid the necessity to precompute all ECs, while in spirit coinciding with the naive algorithm.
-
+Note that such an algorithm is not efficient, as there are exponentially many ECs. 
+However, careful graph algorithms with a nested fixpoint operation avoid the necessity to precompute all ECs, while in spirit identifying ECs.
+```{attention}
+Skipped for now.
+```
 
 ## Towards LTL and $\omega$-regular
 ```{attention}
@@ -1332,7 +1335,7 @@ $$
 ```
 
 ### Maximal expected reachability rewards
-For MDPs, we can study reachability rewards under a minimising or a maximizing policy. We write $\mathbb{E}^{\pi}(\lozenge T)$ for the expected reward in the Markov chain induced by $\pi$.
+For MDPs, we can study reachability rewards under a minimising or a maximising policy. We write $\mathbb{E}^{\pi}(\lozenge T)$ for the expected reward in the Markov chain induced by $\pi$.
 We start with maximal expected rewards. As before, we definite the maximal expected reward as
 $$\mathbb{E}^{\max}(\lozenge T)  = \sup_{\pi \in \Policies} \mathbb{E}^{\pi}(\lozenge T). $$
 Below, we follow the exposure in @DBLP:conf/tacas/ChatterjeeQSWWZ25 [Section 5].
