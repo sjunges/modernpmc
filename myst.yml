@@ -6,13 +6,19 @@ project:
   # description:
   # keywords: []
   authors: [Sebastian Junges]
+  exports:
+    - format: pdf
+      template: templates/plain_latex
+      output: lecture-notes.pdf
+    - format: typst
+      template: lapreprint-typst
+      output: exports/my-document.pdf
   # github:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
   toc:
     - file: preface.md
     - file: mdps.md
     - file: multiobjective.md
-    - file: robust.md
     - file: parametric.md
     - file: appendix.md
   math:
@@ -61,7 +67,7 @@ project:
     '\generatormr': '\llbracket #1 \rrbracket_\mathsf{MR}'
     '\bigland': '\bigwedge'
     '\Ach': '\mathsf{Ach}'
-    '\abstract': '\mathsf{lift}(#1,#2)'
+    '\abst': '\mathsf{lift}(#1,#2)'
 site:
   template: book-theme
   options:

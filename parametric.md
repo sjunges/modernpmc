@@ -209,7 +209,7 @@ every occurrence of $x$ with $[l_x, u_x]$ and every occurrence of $1-x$ by $[1-u
 ```{prf:definition} IMDP abstraction
 Given a simple pMDP $\pmdp = \langle S, A, \delta \rangle$  with a rectangular region $R$. 
 The interval MDP lifting $\pmdp$ and $R$ is given by 
-$$ \abstract{\pmdp}{R} = \langle S, A, \delta' \rangle $$
+$$ \abst{\pmdp}{R} = \langle S, A, \delta' \rangle $$
 with $$ \delta'(s,a)(s') = \delta(s,a)(s')[x_1 \gets R(x_1), \dots , x_n \gets R(x_n)]$$ 
 using an interval extension of substitution.
 ```
@@ -228,7 +228,7 @@ The IMDP is a proper abstraction, when considered via the set of MDPs that can b
 ```{prf:lemma} iMDPs abstract pMDPs with rectangular regions
 :label:lem:par:lifting
 Given a simplex pMDP $\pmdp$ with a rectangular region $R$. 
-Then $\generator{\pmdp}{R} \subseteq \generatorint{\abstract{\pmdp}{R}}$. 
+Then $\generator{\pmdp}{R} \subseteq \generatorint{\abst{\pmdp}{R}}$. 
 ```
 ````{prf:example} iMDPs abstract pMDPs
 Consider $\pmdp$ as in @ex:pmc:vonNeumannTrick and $R$ with $0.4 \leq R(p) \leq 0.7$. 
@@ -712,20 +712,20 @@ $$
 V_{\pmdp,R} = [\min_{\mdp \in \generator{\pmdp}{R}} \pr^{\max}_{\mdp}(\lozenge T), \max_{\mdp \in \generator{\pmdp}{R}} \pr^{\max}_{\mdp}(\lozenge T) ].$$
 Computing this value range for parametric models is intuitively complicated because due to parameter dependencies, we cannot reason locally, as already pointed out in @ex:parametric:kydie.
 On the other hand, in absence of such dependencies, reasoning becomes much simpler.
-Thus, instead of the pMDP $\pmdp$, we analyze $\abstract{\pmdp}{R}$
+Thus, instead of the pMDP $\pmdp$, we analyze $\abst{\pmdp}{R}$
 The value range of this iMDP  is 
 $$
-V_\imdp = [\min_{\mdp \in \generatorint{\abstract{\pmdp}{R}}} \pr^{\max}_{\mdp}(\lozenge T), 
-\max_{\mdp \in \generatorint{\abstract{\pmdp}{R}}} \pr^{\max}_{\mdp}(\lozenge T) ].
+V_\imdp = [\min_{\mdp \in \generatorint{\abst{\pmdp}{R}}} \pr^{\max}_{\mdp}(\lozenge T), 
+\max_{\mdp \in \generatorint{\abst{\pmdp}{R}}} \pr^{\max}_{\mdp}(\lozenge T) ].
 $$
-Due to @lem:par:lifting, $V_{\pmdp,R} \subseteq V_{\abstract{\pmdp}{R}}$.
+Due to @lem:par:lifting, $V_{\pmdp,R} \subseteq V_{\abst{\pmdp}{R}}$.
 
 
 Now, to solve the verification problem, we must prove that $V_\pmdp(R) \geq \lambda$.
-If we compare $V_{\abstract{\pmdp}{R}}$ with $\lambda$, there are 3 cases:
-1. $V_{\abstract{\pmdp}{R}} \geq \lambda$, then also $V_{\pmdp,R} \geq \lambda$ and we have proven the property.
-2. $V_{\abstract{\pmdp}{R}} \leq \lambda$, then also $V_{\pmdp,R} \leq \lambda$ and we have refuted the property.
-3. $\lambda \in V_{\abstract{\pmdp}{R}}$. In this case, we cannot conclude anything. 
+If we compare $V_{\abst{\pmdp}{R}}$ with $\lambda$, there are 3 cases:
+1. $V_{\abst{\pmdp}{R}} \geq \lambda$, then also $V_{\pmdp,R} \geq \lambda$ and we have proven the property.
+2. $V_{\abst{\pmdp}{R}} \leq \lambda$, then also $V_{\pmdp,R} \leq \lambda$ and we have refuted the property.
+3. $\lambda \in V_{\abst{\pmdp}{R}}$. In this case, we cannot conclude anything. 
 
 To handle the third case, we split the region, as justified by the following observation:
 ```{prf:lemma}

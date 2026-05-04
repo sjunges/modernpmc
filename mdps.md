@@ -1053,15 +1053,15 @@ This yields a quadratic run time for value iteration. By using dynamic programmi
 In particular, if we sort the MDP topologically (i.e., by ascending distance to the target), 
 the following dynamic programming scheme yields the correct solution.
 
-````{prf:algorithm}
+```{admonition} Algorithm
 **Inputs** A Bellman operator and topologically sorted states $\mathsf{sorted}(S)$.
 
 **Outputs** The least fixed point of that operator.
 
-for every $s \in \mathsf{sorted}(S)$:<br/>
-<span style="margin-left: 2em;">$V(s) \gets \Phi(V)(s)$
+**for** every $s \in \mathsf{sorted}(S)$:
 
-````
+$\quad V(s) \gets \Phi(V)(s)$
+```
 
 
 

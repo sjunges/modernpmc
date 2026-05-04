@@ -38,9 +38,11 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      # Install graphviz for dot handling.
-      - name: Install Graphviz
-        run: sudo apt-get update && sudo apt-get install -y graphviz
+      # Install graphviz and LaTeX for PDF export
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra latexmk cm-super
 
       # Install Python dependencies
       - name: Install Python dependencies
@@ -56,6 +58,13 @@ jobs:
       # Build the book (this executes code cells)
       - name: Build HTML
         run: jupyter-book build --execute --html
+
+      - name: Build PDF
+        run: jupyter-book build --pdf
+
+      - name: Copy PDF to site
+        run: |
+          find _build/exports -name "*.pdf" -exec cp {} _build/html/ \;
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
