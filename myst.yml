@@ -17,7 +17,6 @@ project:
     - file: mdps.md
     - file: multiobjective.md
     - file: parametric.md
-    - file: pomdps.md
     - file: appendix.md
   math:
     '\lfp': '\mathsf{lfp.}'

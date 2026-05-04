@@ -139,7 +139,7 @@ where $\delta'(s,a)(s') = \delta(s,a)(s')[\val]$ for all $s,s'$ and $a \in \EnAc
 ````{prf:example} Induced model
 The following instantiates the pMC from @ex:pmc:vonNeumannTrick with $p=\frac{1}{3}$.
 ```{code-cell} python
-:tags: [remove-input]
+:tags: [hide-input]
 induced = vnpmc.get_instantiated_model({"p": Fraction(1,3)})
 stormvogel.to_dot.plot_model_pydot(induced, positions={induced.get_state_by_id(sinit.state_id): (0,0), 
      induced.get_state_by_id(s0.state_id): (2,0), induced.get_state_by_id(s01.state_id): (4,0), induced.get_state_by_id(s1.state_id): (-2,0), induced.get_state_by_id(s10.state_id): (-4,0)})
@@ -217,7 +217,7 @@ using an interval extension of substitution.
 ````{prf:example}
 We provide an example for @ex:parametric:kydie and $R$ with $$ \frac{1}{2} \leq R(x) \leq \frac{3}{5}, \frac{3}{7} \leq R(y) \leq \frac{4}{7}.$$
 ```{code-cell} python
-:tags: [remove-input]
+:tags: [hide-input]
 region = sv.parametric.region.RectangularRegion({"x": tuple([Fraction(1,2), Fraction(3,5)]), "y": tuple([Fraction(3,7), Fraction(4,7)])})
 imc = sv.parametric.region.to_interval_mdp(pkydie,region)
 stormvogel.to_dot.plot_model_pydot(imc)
@@ -363,6 +363,7 @@ s0 = pmc.new_state(["init"], friendly_name="s0")
 s1 = pmc.new_state(friendly_name="s1")  
 s0.set_choices([(1-x, s0), (x, s1)])
 s1.set_choices([(1, s1)])
+stormvogel.to_dot.plot_model_pydot(pmc)
 ```
 In particular, the probability to leave the initial state and thus reach the target is one, if $x \in (0,1]$. 
 If $x=0$, the probability is zero.
@@ -407,9 +408,9 @@ The state elimination algorithm removes self-loops whenever possible and then el
 We apply elimination steps on @ex:pmc:vonNeumannTrick, repeated here for convenience. 
 The targets are already absorbing and state $s_0$ has no self-loop, so we can eliminate the transition from the initial state to $s_0$.
 This introduced a self-loop at the initial state, and a transition from initial state to the state 01.
+
 ```{code-cell} python
 :tags: [remove-input]
-import stormvogel.teaching.parametric as elim
 vnpmccopy = sv.model.new_dtmc()
 pcopy = vnpmccopy.declare_parameter("p")
 sinitcopy = vnpmccopy.initial_state
@@ -423,20 +424,24 @@ sinitcopy.set_choices([(pcopy,s0copy), (1-pcopy,s1copy)])
 s0copy.set_choices([(pcopy,sinitcopy), (1-pcopy,s01copy)])
 s1copy.set_choices([(pcopy,s10copy), (1-pcopy,sinitcopy)])
 vnpmccopy.add_self_loops()
+```
+```{code-cell} python
+:tags: [hide-input]
+import stormvogel.teaching.parametric as elim
 stormvogel.to_dot.plot_model_pydot(vnpmccopy,positions={sinitcopy: (0,0), s0copy: (2,0), s01copy: (4,0), s1copy: (-2,0), s10copy: (-4,0)}, default_fill="white", self_loop_position="s")
 elim.eliminate_transition(vnpmccopy, sinitcopy, s0copy)
 stormvogel.to_dot.plot_model_pydot(vnpmccopy,positions={sinitcopy: (0,0), s0copy: (2,1), s01copy: (4,0), s1copy: (-2,0), s10copy: (-4,0)}, default_fill="white", self_loop_position="s")
 ```
 Now, as there are no more incoming states in $s_0$, we can eliminate the state and then also do the same elimination for $s_1$ (which also has no self-loop).
 ```{code-cell} python
-:tags: [remove-input]
+:tags: [hide-input]
 elim.eliminate_state(vnpmccopy, s0copy, remove=True)
 elim.eliminate_state(vnpmccopy, s1copy, remove=True)
 stormvogel.to_dot.plot_model_pydot(vnpmccopy,positions={sinitcopy: (0,0), s0copy: (2,0), s01copy: (4,0), s1copy: (-2,0), s10copy: (-4,0)}, default_fill="white", self_loop_position="s")
 ```
 Finally, we remove the self-loop from the initial state to rescale the probabilities.
 ```{code-cell} python
-:tags: [remove-input]
+:tags: [hide-input]
 elim.eliminate_selfloop(vnpmccopy,sinitcopy)
 stormvogel.to_dot.plot_model_pydot(vnpmccopy,positions={sinitcopy: (0,0), s0copy: (2,0), s01copy: (4,0), s1copy: (-2,0), s10copy: (-4,0)}, default_fill="white", self_loop_position="s")
 ````
@@ -444,7 +449,7 @@ stormvogel.to_dot.plot_model_pydot(vnpmccopy,positions={sinitcopy: (0,0), s0copy
 ````{prf:example}
 We now also run state elimination for @ex:parametric:kydie.
 ```{code-cell} python
-:tags: [remove-input]
+:tags: [hide-input]
 import stormvogel.teaching.parametric as elim
 pkydie_e = pkydie.copy()
 states = list(pkydie_e.states)
@@ -582,7 +587,7 @@ The notions of limits here are well-defined on mild assumptions on the shapes of
 We now approximate the safe region from @ex:par:exactpartition. The following figures shows a coarse and a finer approximation. We also plot the boundary of the safe region for convenience.
 $R_{\mathsf{safe}}$ and $R_{\mathsf{unsafe}}$ are  both represented by a union of finitely many rectangular regions.
 ```{code-cell} python 
-:tags: [remove-input]
+:tags: [hide-input]
 from stormvogel.teaching.parametric import parameter_space_partitioning                                                                                                                                      
 annotated = parameter_space_partitioning(
     pkydie, prop, threshold, max_iterations=100
@@ -657,7 +662,7 @@ is valid iff there is a feasible parameter instantiation.
 The proof simply observes that for any assignment to the parameters, this correctly provides the standard linear equation system.
 ````{prf:example}
 ```{code-cell} python
-:tags: [remove-input]
+:tags: [hide-input]
 from stormvogel.teaching.parametric import feasibility_problem
 from stormvogel.parametric.region import RectangularRegion
 region = RectangularRegion({"x": [Fraction(1,100), Fraction(99,100)], "y": [Fraction(1,100), Fraction(99,100)]})
