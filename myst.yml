@@ -10,9 +10,6 @@ project:
     - format: pdf
       template: templates/plain_latex
       output: lecture-notes.pdf
-    - format: typst
-      template: lapreprint-typst
-      output: exports/my-document.pdf
   # github:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
   toc:

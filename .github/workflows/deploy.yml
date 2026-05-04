@@ -59,12 +59,12 @@ jobs:
       - name: Build HTML
         run: jupyter-book build --execute --html
 
-      - name: Build PDF
-        run: jupyter-book build --pdf
-
-      - name: Copy PDF to site
-        run: |
-          find _build/exports -name "*.pdf" -exec cp {} _build/html/ \;
+#      - name: Build PDF
+#        run: jupyter-book build --execute --pdf
+#
+#      - name: Copy PDF to site
+#        run: |
+#          find _build/exports -name "*.pdf" -exec cp {} _build/html/ \;
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
