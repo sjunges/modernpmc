@@ -764,11 +764,11 @@ stormvogel.to_dot.plot_model_pydot(pmc)
 threshold = 0.12             
 solfunc = stormvogel.model_checking(pmc, "P=? [F \"T\"]").at_init()                                                                                                                     
 annotated = parameter_space_partitioning(
-    pmc, f"P<=0.2 [F \"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=5
+    pmc, f"P=? [F \"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=5
 )  
 _ = plot_annotated_regions_1d(annotated, threshold, solution_fn=solfunc)
 annotated = parameter_space_partitioning(
-    pmc, f"P<=0.2 [F \"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=20
+    pmc, f"P=? [F \"T\"]", threshold, initial_region=RectangularRegion({"x": [Fraction(1,10), Fraction(9,10)]}), max_iterations=20
 )  
 _ = plot_annotated_regions_1d(annotated, threshold, solution_fn=solfunc)
 ```

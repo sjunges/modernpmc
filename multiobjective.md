@@ -169,7 +169,7 @@ sv.to_dot.plot_model_pydot(mdp_mem, positions={s0: (0,0), s1: (2,0), s2: (-2,0)}
 ```
 Specifically, a witnessing policy visits first the red state $s_1$ before visiting the blue state $s_2$. 
 In particular, the policy changes its mode once we enter $s_1$: The policy now only wants to optimize reaching the blue state $s_2$. 
-As we formalise [later](def:multiobjective:unfolding), the policy must thus track which target sets have already been visited. 
+As we formalise [later](#def:multiobjective:unfolding), the policy must thus track which target sets have already been visited. 
 ````
 
 However, it suffices to consider randomising finite-memory policies. 

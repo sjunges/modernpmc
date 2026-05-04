@@ -61,19 +61,19 @@ plot_model_pydot(monty_hall_mdp)
 ````
 
 ```{prf:definition}
-A _partially observable MDP_ (POMDP) is a triple $\langle \mdp, \Obs, \obs \rangle$, 
+A _partially observable MDP_ (POMDP) is a triple $\langle \mdp, \Obs, \obsfun \rangle$, 
 where $\mdp$ is an MDP with states $S$, $\Obs$ is a finite nonempty set of _observations_,
-and $\obs\colon S \rightarrow \Distr{\Obs}$ is a _state-based observation function_.
+and $\obsfun\colon S \rightarrow \Distr{\Obs}$ is a _state-based observation function_.
 ```
 ```{prf:remark}
 Beyond state-based observations, the literature also uses transition-based observations where information is shared when taking a transition.
 We do not use such models here.
 ```
 ```{warning} Assumption
-From here on, assume deterministic observations with the shape $\obs\colon S \rightarrow \Obs$.
+From here on, assume deterministic observations with the shape $\obsfun\colon S \rightarrow \Obs$.
 Any stochastic observation function can be transformed into a determinsitic one using a polynomial blowup.
 ```
-```{prf:definition} Policies
+```{prf:definition} Observation-based policies
 
 ```
 Indeed, 

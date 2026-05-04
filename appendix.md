@@ -1,3 +1,11 @@
+---
+numbering:
+  heading_1: true
+  heading_2: true
+  heading_3: true
+  equations: false
+
+---
 
 # Appendix
 
@@ -66,8 +74,10 @@ Intuitively, we simply follow the transitions by the DFA to arrive at a state. F
 - $\delta(q, \epsilon) = q$, and
 - $\delta(q, w \cdot a) = \delta(\delta(q,w), a).$
 
-(def:dfa:language)=
+```{prf:definition} DFA language
+:label:def:dfa:language
 The language accepted by the DFA is the set of words that end in a final state $$ \mathcal{L}(\dfa) = \{ w \in \Sigma^{*} \mid \delta(q_\text{init}, w) \in F \}$$.
+```
 
 (app:fixpoints)=
 ## Fixpoint theory

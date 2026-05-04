@@ -252,7 +252,7 @@ These two constructions yield equivalent Markov chains
 ```
 
 ````{prf:definition}
-def:mdps:generatorinduced
+:label:def:mdps:generatorinduced
 Given an MDP $\mdp$ and a set of policies $\Pi$, we define $$ \generator{\mdp}{\Pi} = \{ \mdp[\pi] \mid \pi \in \Pi \}. $$
 We define $$ \generatormd{\mdp} = \generator{\mdp}{\MdPolicies} \text{ and } \generatormr{\mdp} = \generator{\mdp}{\MrPolicies}$$
 ````

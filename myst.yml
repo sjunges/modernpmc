@@ -17,6 +17,7 @@ project:
     - file: mdps.md
     - file: multiobjective.md
     - file: parametric.md
+    - file: pomdps.md
     - file: appendix.md
   math:
     '\lfp': '\mathsf{lfp.}'
@@ -65,6 +66,8 @@ project:
     '\bigland': '\bigwedge'
     '\Ach': '\mathsf{Ach}'
     '\abst': '\mathsf{lift}(#1,#2)'
+    '\Obs': 'Z'
+    '\obsfun': '\mathsf{obs}'
 site:
   template: book-theme
   options:
