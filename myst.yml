@@ -18,6 +18,10 @@ project:
     - file: multiobjective.md
     - file: parametric.md
     - file: appendix.md
+  license:
+    content:
+      id: CC-BY-NC-SA-4.0
+  github:  sjunges/modernpmc
   math:
     '\lfp': '\mathsf{lfp.}'
     '\gfp': '\mathsf{gfp.}'
@@ -67,10 +71,13 @@ project:
     '\abst': '\mathsf{lift}(#1,#2)'
     '\Obs': 'Z'
     '\obsfun': '\mathsf{obs}'
+    '\obstr': '\obsfun(#1)'
+    '\binit': 'b_\mathrm{init}'
 site:
   template: book-theme
   options:
   #   favicon: favicon.ico
   #   logo: site_logo.png
     logo_text: Lecture Notes
+    style: public/feedback.css
 
