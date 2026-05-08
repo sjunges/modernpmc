@@ -17,6 +17,7 @@ Additionally, various examples are still missing and most citations are still mi
 ```
 
 ```{code-cell} python
+:tags:[remove-input]
 import stormpy
 import sympy
 import stormvogel as sv
@@ -26,11 +27,6 @@ import stormvogel.to_dot
 sympy.init_printing()
 from IPython.display import Math
 import stormvogel.teaching.bellman as bellman
-```
-
-
-```{code-cell} python
-:tags: [remove-input, remove-output]
 
 def create_mdp_one():
     def _available_actions(s):
@@ -153,7 +149,8 @@ such that for all $i$:
 - $\langle s_i,a_i\rangle$ is a choice, and
 - $\delta(s_i,a_i)(s_{i+1}) > 0$.
 
-The set of all paths is denoted $\Paths^\mdp$.
+The set of all paths is denoted $\Paths^\mdp$. We drop $\mdp$ whenever it is clear from the context.
+We write $\Paths^\mdp(s)$ for the set of paths with $s_0 = s$, and $\Paths(s,T)$ for paths that start in $s$ and end in $T$.
 ```
 For a finite path
 $
@@ -492,7 +489,7 @@ x_s=
 \begin{cases}
 1 & s\in T \\
 0 & s\in \Szero \\
-\min_{a\in A(s)}
+\min_{a\in \EnAct{s}}
 \sum_{s'}\delta(s,a,s')x_{s'}
 & \text{otherwise}
 \end{cases}
@@ -559,7 +556,7 @@ x_s=
 \begin{cases}
 1 & s\in T \\
 0 & s\in \Smaxzero \\
-\max_{a\in A(s)}
+\max_{a\in \EnAct{s}}
 \sum_{s'}\delta(s,a,s')x_{s'}
 & \text{otherwise}
 \end{cases}
@@ -868,7 +865,7 @@ The Bellman operator for minimal reachability probabilities and for a fixed MDP 
 $$\Phi(F)(s) = \begin{cases} 
  	1 & \text{if }s \in T, \\
  	0 & \text{if }s \in \Szero, \\ 
-\min_{a \in A(s)} \sum_{s' \in S} P(s,a,s') F(s') & \text{otherwise.}
+\min_{a \in \EnAct{s}} \sum_{s' \in S} \delta(s,a,s') F(s') & \text{otherwise.}
  \end{cases}
 $$
 ```
@@ -982,7 +979,7 @@ The Bellman operator for maximal reachability probabilities (MaxReachProb) and f
 $$\Phi(F)(s) = \begin{cases} 
  	1 & \text{if }s \in T, \\
  	0 & \text{if }s \in \Smaxzero, \\ 
-\max_{a \in A(s)} \sum_{s' \in S} P(s,a,s') F(s') & \text{otherwise.}
+\max_{a \in \EnAct{s}} \sum_{s' \in S} \delta(s,a,s') F(s') & \text{otherwise.}
  \end{cases}
 $$
 ```
@@ -1346,7 +1343,7 @@ $$
 \mathcal{\Phi}_{\mathbb{E}}^{\max}(F)(s) =
 \begin{cases}
 0 & \text{if } s\in T,\\
-\max_{a\in A(s)} \operatorname{rew}(s,a) + \sum_{s'}P(s,a,s') \cdot F(s')
+\max_{a\in \EnAct{s}} \operatorname{rew}(s,a) + \sum_{s'}\delta(s,a,s') \cdot F(s')
 & \text{if } s \in \Sposmin,\\
 \infty & \text{otherwise}
 \end{cases}
@@ -1403,7 +1400,7 @@ Likewise, we can define Bellman equations and the operators. For conciseness, we
 :label: def:bellmanop:mdiscountedexpreward
 The Bellman operator for maximal discounted total reward and for a fixed MDP is a mapping $\Phi_{\drew_\gamma}^{\max} \colon [0,\infty)^S \rightarrow [0,\infty)^S$ s.t. 
 $$\Phi_{\drew_\gamma}^{\max}(F)(s) = 
-\max_{a \in A(s)} r(s,a) + \gamma \cdot \sum_{s' \in S} P(s,a,s') F(s').
+\max_{a \in \EnAct{s}} r(s,a) + \gamma \cdot \sum_{s' \in S} \delta(s,a,s') F(s').
 $$
 The Bellman operator for minimal discounted total reward is defined analogously. 
 ```
