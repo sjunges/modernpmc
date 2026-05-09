@@ -10,7 +10,7 @@ The notes are currently in alpha state.
 
 ## Thanks
 I am thankful for the material shared by Tim Quatmann and Joost-Pieter Katoen from RWTH Aachen University, as well as from Nils Jansen and Maximilian Weininger from Ruhr University Bochum.
-Furthermore, the material is partially based on the book Principles of Model Checking by Christel Baier and Joost-Pieter Katoen 
+Furthermore, the material is inspired on content of the book Principles of Model Checking by Christel Baier and Joost-Pieter Katoen 
 and on the second edition of the book Markov Decision Processes by Martin Puterman.
 
 ## Code examples
@@ -31,9 +31,15 @@ from IPython.display import Math
 import stormvogel.teaching.bellman as bellman
 ```
 The version used in these notes is stormpy {eval}`stormpy.info.storm_version()`.
+We currently run a custom version of stormvogel with the intent of merging this back. 
 
 To not disrupt the reading flow to much, I've decided to mostly not show the code generating the results.
 However, the markdown can be downloaded for every chapter.
+
+## Feedback
+I welcome feedback a lot. 
+Every section has a discuss button (available when hovering over the section title) which brings you straight to a github discussion page. 
+Feedback can also be posted by mail.
 
 ## License
 This book is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).

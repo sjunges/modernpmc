@@ -2,6 +2,8 @@
 version: 1
 project:
   id: b671e404-2fdb-42a5-83fd-2326c008e311
+  plugins:
+    - feedback-links.mjs
   title: Model Checking Lecture Notes
   # description:
   # keywords: []
