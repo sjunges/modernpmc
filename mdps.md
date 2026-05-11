@@ -11,10 +11,6 @@ kernelspec:
 ---
 
 # Markov Decision Processes
-```{attention}
-With the attention blocks, we highlight blocks that are still missing. 
-Additionally, various examples are still missing and most citations are still missing
-```
 
 ```{code-cell} python
 :tags:[remove-input]

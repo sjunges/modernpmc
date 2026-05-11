@@ -8,15 +8,21 @@ kernelspec:
 These lecture notes are written for the course Model Checking at Radboud University and cover part of the material.
 The notes are currently in alpha state.
 
+```{attention}
+With the attention blocks, we highlight blocks that are still missing. 
+Various examples are still missing and most citations are still missing.
+```
+
+
 ## Thanks
 I am thankful for the material shared by Tim Quatmann and Joost-Pieter Katoen from RWTH Aachen University, as well as from Nils Jansen and Maximilian Weininger from Ruhr University Bochum.
-Furthermore, the material is inspired on content of the book Principles of Model Checking by Christel Baier and Joost-Pieter Katoen 
-and on the second edition of the book Markov Decision Processes by Martin Puterman.
+A lot of material is inspired on chapter ten of the book Principles of Model Checking by Christel Baier and Joost-Pieter Katoen, 
+ on the second edition of the book Markov Decision Processes by Martin Puterman, and on lecture slides by Dave Parker.
 
 ## Code examples
 Examples in these lecture notes are generated using stormvogel and the stormvogel teaching module. 
-We compute various results using the storm model checker, via the python bindings. 
-We generate equations (for displaying) via sympy.
+We compute various results using the [storm model checker](www.stormchecker.org), via the python bindings `stormpy`. 
+We generate equations (for displaying) via sympy and visualise graphs with pydot.
 In particular, the following import statements preceed all code used in these lecture notes.
 ```{code-cell} python
 :tags: [remove-outputs]
@@ -28,7 +34,6 @@ import stormvogel.bird as bird
 import sympy
 sympy.init_printing()
 from IPython.display import Math
-import stormvogel.teaching.bellman as bellman
 ```
 The version used in these notes is stormpy {eval}`stormpy.info.storm_version()`.
 We currently run a custom version of stormvogel with the intent of merging this back. 
@@ -37,8 +42,8 @@ To not disrupt the reading flow to much, I've decided to mostly not show the cod
 However, the markdown can be downloaded for every chapter.
 
 ## Feedback
-I welcome feedback a lot. 
-Every section has a discuss button (available when hovering over the section title) which brings you straight to a github discussion page. 
+I would be very happy to receive feedback. 
+Every section has a discuss button (available when hovering over the section title) which brings you straight to a [github discussion page](https://github.com/sjunges/modernpmc/discussions). 
 Feedback can also be posted by mail.
 
 ## License
