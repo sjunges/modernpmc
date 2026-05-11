@@ -397,17 +397,17 @@ _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0)], figsize=(2, 2
 ```
 We now see that the convex hull is formed, in particular, points between  two achievable points must also be achievable.
 
-Next, we take a weight vector $(0.5, 0.3)$ orthogonal to the current face between the two Pareto-optimal points:
+Next, we take a weight vector $(0.5, 0.9)$ orthogonal to the current face between the two Pareto-optimal points:
 ```{code-cell} python
 :tags: [remove-input]
-_ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.3, 0.5)], figsize=(2, 2), legend="outside") 
+_ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.5, 0.9)], figsize=(2, 2), legend="outside") 
 ```
 This yields one more Pareto optimal point.
 
 By adding two more weight vectors, we can prove that there are no further achievable points:
 ```{code-cell} python
 :tags: [remove-input]
-_ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.3, 0.5), (0.1, 0.35), (0.4, 0.55)], figsize=(2, 2), legend="outside") 
+_ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.5, 0.9), (0.1, 0.35), (0.4, 0.55)], figsize=(2, 2), legend="outside") 
 ```
 ````
 
