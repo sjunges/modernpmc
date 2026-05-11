@@ -703,21 +703,6 @@ $$(\Phi V)(b) = \begin{cases} 1 & \text{if } b \in T^B, \\ \displaystyle\max_{a 
 Initialised with the target indicator $V_0(b) = \indicator{\mathrm{supp}(b) \subseteq T}$,
 one application yields the one-step reachability probability, and iterating converges to $V^*$.
 
-````{prf:example}
-Consider @ex:pomdp:4state.
-```{code-cell} python
-:tags: [hide-input]
-from stormvogel.teaching.pomdp_backup import (
-      AlphaVI, initial_alpha, make_operator_pomdp_maxreachprob_exact,                                                                                                        
-      plot_alpha_vector_iterations,                                                                                                                                    
-  )                                                                                                                                                                             
-op = make_operator_pomdp_maxreachprob_exact(model, "target")                                                                                                                                                                       
-vi = AlphaVI(op, [initial_alpha(model, "target")])                                                                                                                   
-iters = [vi.step() for _ in range(4)]                                                                                                                              
-                                                                                                                                                                       
-fig, axes = plot_alpha_vector_iterations(iters, s1, s2) 
-```
-````
 ```{attention}
 Content here is missing.
 ```
