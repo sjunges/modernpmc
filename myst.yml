@@ -19,6 +19,7 @@ project:
     - file: mdps.md
     - file: multiobjective.md
     - file: parametric.md
+    - file: pomdps.md
     - file: appendix.md
   license:
     content:
