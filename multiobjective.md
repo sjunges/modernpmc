@@ -378,8 +378,13 @@ Clearly, $\vec{p}$ is achievable by $\pi$. The argument that it is also Pareto o
 Assume that one of those points would be achievable by policy $\hat{\pi}$: Then $\hat{\pi}$ demonstrates that $\pi$ is not optimal w.r.t. weighted reachability, which is a contradiction to the definition.
 
 With this theorem, the idea is now to iteratively explore different weight vectors. 
-Every weight vector sharpens the overapproximation.
-By carefully selecting the weight vectors, we can also ensure we eventually find all vertices of the Pareto curve.
+The theorem above ensures the soundness. 
+Completeness of the algorithm relies on the fact that there are only finitely many policies,
+but also requires carefully selecting the weight vectors. In particular, 
+while every weight vector different to the previous weight vectors sharpens the overapproximation,
+we need to be careful to ensure that we find all vertices in finite time. 
+However, if we pick the weight vectors orthogonal to one of the existing faces of the Pareto curve, we only need as many iterations as the number of faces + number of vertices of the exact Pareto curve.
+The example below also demonstrates this way of picking weight vectors.
 ````{prf:example}
 In the following, we first optimize for the weight vector $(1, 0)$.
 ```{code-cell} python
