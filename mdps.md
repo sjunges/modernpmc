@@ -1228,7 +1228,7 @@ Essentially, Büchi properties ask that a set of (target) states are visited inf
 To avoid confusion, we call the _target_ states _Büchi_ states in this subsection.
 ```
 ```{prf:definition}
-Given a set of _Büchi_ states $T$, an infinite path $s_0s_1\dots$ satisfies a Büchi property $\Box\lozenge T$ iff 
+Given a set of _Büchi_ states $T$, an infinite path $s_0s_1\dots$ satisfies a Büchi property mdlgwhtsquare\lozenge T$ iff 
 there are infinitely many $i$ such that $s_i \in T$.
 ```
 As such, Büchi properties allow expressing that one can reach some good state and that one is able to visit from that state another good state.
