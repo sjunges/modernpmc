@@ -3,6 +3,8 @@ name: Jupyter Book (via myst) GitHub Pages Deploy
 on:
   push:
     branches: [main]
+  pull_request:
+
 
 env:
   BASE_URL: /${{ github.event.repository.name }}
@@ -69,5 +71,7 @@ jobs:
           path: ./_build/html
 
       - name: Deploy to GitHub Pages
+        # Only login if using main on original repo (and not for pull requests or forks)
+        if: github.repository_owner == 'sjunges' && github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v4
