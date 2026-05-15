@@ -46,7 +46,7 @@ Parametric Markov chains are pMDPs such that in every state, only one action is 
 We typically denote these as tuples $\langle S, \mathbf{x}, \delta \rangle$.
 
 ````{prf:example} Von Neumann Unbiased Coins 
-:label:ex:pmc:vonNeumannTrick
+:label:ex:pmc:vonneumanntrick
 
 Say we want to simulate an unbiased, perfectly random coin flip.
 We only have access to an old, biased coin and can flip it as many times as we want —
@@ -137,7 +137,7 @@ the induced MDP $\pmdp[\val]$ is the MDP $\langle S, A, \delta' \rangle$,
 where $\delta'(s,a)(s') = \delta(s,a)(s')[\val]$ for all $s,s'$ and $a \in \EnAct{s}$.
 ```
 ````{prf:example} Induced model
-The following instantiates the pMC from @ex:pmc:vonNeumannTrick with $p=\frac{1}{3}$.
+The following instantiates the pMC from @ex:pmc:vonneumanntrick with $p=\frac{1}{3}$.
 ```{code-cell} python
 :tags: [hide-input]
 induced = vnpmc.get_instantiated_model({"p": Fraction(1,3)})
@@ -194,14 +194,14 @@ and additionally
 $$ \sum_{s' \in S} \delta(s,a)(s') = 1. $$
 ```
 As a consequence, non-constant transition probabilities always occur in pairs $x$, $1-x$ for $x \in \mathbf{x}$.
-The models in @ex:pmc:vonNeumannTrick and @ex:parametric:kydie are indeed simple pMCs.
+The models in @ex:pmc:vonneumanntrick and @ex:parametric:kydie are indeed simple pMCs.
 As we will see below, except for the syntactical form, algorithmically, there is nothing simple about simple pMDPs.
 A key characteristic of simple pMDPs, and the main reason we use them, is that the set of well-defined regions is simply the unit hypercube and in particular rectangular.
 
 ## Relation to interval MDPs
 Parametric MDPs are closely related to non-rectangular robust MDPs.
 The syntax of parametric MDPs already naturally indicates a static type of uncertainty.
-As already highlighted in @ex:pmc:vonNeumannTrick: in contrast to (s,a)-rectangular robust MDPs, parametric MDPs can express that two different transitions must be the same.
+As already highlighted in @ex:pmc:vonneumanntrick: in contrast to (s,a)-rectangular robust MDPs, parametric MDPs can express that two different transitions must be the same.
 
 The following lemmas between parametric MDPs with rectangular regions and interval MDPs formalizes the relation and can be adapted for various other robust models.
 Basically, we obtain an iMDP by replacing, for every parameter $x$, 
@@ -231,7 +231,7 @@ Given a simplex pMDP $\pmdp$ with a rectangular region $R$.
 Then $\generator{\pmdp}{R} \subseteq \generatorint{\abst{\pmdp}{R}}$. 
 ```
 ````{prf:example} iMDPs abstract pMDPs
-Consider $\pmdp$ as in @ex:pmc:vonNeumannTrick and $R$ with $0.4 \leq R(p) \leq 0.7$. 
+Consider $\pmdp$ as in @ex:pmc:vonneumanntrick and $R$ with $0.4 \leq R(p) \leq 0.7$. 
 Let $\imdp'$ be the lifting of that pMC and $R$.
 The following MC is in $\generatorint{\imdp'}$ but not in $\generator{\pmdp}{R}$.
 ```{code-cell} python
@@ -405,7 +405,7 @@ Eliminating states can be applied to any non-initial, non-sink state $s$. It run
 The state elimination algorithm removes self-loops whenever possible and then eliminates non-initial, non-sink states.
 
 ````{prf:example}
-We apply elimination steps on @ex:pmc:vonNeumannTrick, repeated here for convenience. 
+We apply elimination steps on @ex:pmc:vonneumanntrick, repeated here for convenience. 
 The targets are already absorbing and state $s_0$ has no self-loop, so we can eliminate the transition from the initial state to $s_0$.
 This introduced a self-loop at the initial state, and a transition from initial state to the state 01.
 
