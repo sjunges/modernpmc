@@ -44,18 +44,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y graphviz 
 
-      # Install Python dependencies
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install jupyter ipykernel
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt
 
-      # Install MyST / JupyterBook CLI
-      - name: Install Jupyter Book (MyST)
-        run: npm install -g jupyter-book
-
-      # Build the book (this executes code cells)
+      # Build the HTML version of the book (this executes code cells)
       - name: Build HTML
         run: jupyter-book build --execute --html
 
