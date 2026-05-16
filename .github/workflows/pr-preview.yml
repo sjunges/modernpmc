@@ -48,6 +48,20 @@ jobs:
         if: github.event.action != 'closed'
         run: jupyter-book build --execute --html
 
+      - name: Disable Jekyll
+        if: github.event.action != 'closed'
+        run: |
+          touch _build/html/.nojekyll
+          mkdir -p /tmp/nojekyll && touch /tmp/nojekyll/.nojekyll
+
+      - name: Ensure .nojekyll at gh-pages root
+        if: github.event.action != 'closed'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: /tmp/nojekyll
+          clean: false
+
       - name: Deploy or tear down PR preview
         uses: rossjrw/pr-preview-action@v1
         with:
