@@ -1,53 +1,57 @@
-name: Jupyter Book (via myst) GitHub Pages Deploy
+name: PR Preview
 
 on:
-  push:
-    branches: [main]
-
-env:
-  BASE_URL: /${{ github.event.repository.name }}
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pr-preview-${{ github.event.number }}
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  preview:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Python
+        if: github.event.action != 'closed'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
 
       - name: Install system dependencies
+        if: github.event.action != 'closed'
         run: |
           sudo apt-get update
           sudo apt-get install -y graphviz
 
       - name: Install Python dependencies
+        if: github.event.action != 'closed'
         run: |
           python -m pip install --upgrade pip
           pip install jupyter ipykernel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install Jupyter Book (MyST)
+        if: github.event.action != 'closed'
         run: npm install -g jupyter-book
 
       - name: Build HTML
+        if: github.event.action != 'closed'
         run: jupyter-book build --execute --html
 
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Deploy or tear down PR preview
+        uses: rossjrw/pr-preview-action@v1
         with:
-          folder: _build/html
-          branch: gh-pages
-          clean-exclude: pr-preview/
+          source-dir: _build/html
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
