@@ -70,11 +70,19 @@ jobs:
         run: jupyter-book build --execute --pdf
         continue-on-error: true
 
-      - name: Collect HTML and warnings
+      - name: Collect artifact
         if: github.event.action != 'closed'
         run: |
           touch _build/html/.nojekyll
           cp -r _build/html pr-meta/html
+
+          if [ "${{ steps.pdf.outcome }}" == "success" ]; then
+            pdf_src=$(find _build -name "*.pdf" 2>/dev/null | head -1)
+            if [ -n "$pdf_src" ]; then
+              cp "$pdf_src" pr-meta/html/lecture-notes.pdf
+            fi
+          fi
+
           warnings=$(grep '⚠️' build.log | sed 's/^[[:space:]]*//' || true)
           preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.number }}/"
           {
@@ -90,14 +98,10 @@ jobs:
               echo "✅ No build warnings."
             fi
             echo ""
-            if [ "${{ steps.pdf.outcome }}" == "success" ]; then
-              pdf_src=$(find _build/exports -name "*.pdf" | head -1)
-              if [ -n "$pdf_src" ]; then
-                cp "$pdf_src" pr-meta/html/lecture-notes.pdf
-                echo "✅ PDF build succeeded. [lecture-notes.pdf](${preview_url}lecture-notes.pdf)"
-              else
-                echo "⚠️ PDF build reported success but no PDF file was found."
-              fi
+            if [ "${{ steps.pdf.outcome }}" == "success" ] && [ -f pr-meta/html/lecture-notes.pdf ]; then
+              echo "✅ PDF build succeeded. [lecture-notes.pdf](${preview_url}lecture-notes.pdf)"
+            elif [ "${{ steps.pdf.outcome }}" == "success" ]; then
+              echo "⚠️ PDF build reported success but no PDF file was found."
             else
               echo "❌ PDF build failed."
             fi
