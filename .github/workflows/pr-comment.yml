@@ -1,0 +1,72 @@
+name: PR Preview Deploy
+
+on:
+  workflow_run:
+    workflows: ["PR Preview"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Download preview artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-preview
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read PR metadata
+        id: meta
+        run: |
+          echo "pr_number=$(cat pr-number.txt)" >> $GITHUB_OUTPUT
+          echo "action=$(cat action.txt)" >> $GITHUB_OUTPUT
+
+      - name: Post comment
+        if: steps.meta.outputs.action != 'closed'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: myst-build-warnings
+          number: ${{ steps.meta.outputs.pr_number }}
+          path: comment.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ensure .nojekyll at gh-pages root
+        if: steps.meta.outputs.action != 'closed'
+        run: mkdir -p /tmp/nojekyll && touch /tmp/nojekyll/.nojekyll
+
+      - name: Push .nojekyll to gh-pages root
+        if: steps.meta.outputs.action != 'closed'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: /tmp/nojekyll
+          clean: false
+
+      - name: Deploy PR preview
+        if: steps.meta.outputs.action != 'closed'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: html/
+          target-folder: pr-preview/pr-${{ steps.meta.outputs.pr_number }}
+          clean: true
+
+      - name: Remove PR preview
+        if: steps.meta.outputs.action == 'closed'
+        run: mkdir -p /tmp/empty
+
+      - name: Remove PR preview from gh-pages
+        if: steps.meta.outputs.action == 'closed'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: /tmp/empty
+          target-folder: pr-preview/pr-${{ steps.meta.outputs.pr_number }}
+          clean: true
