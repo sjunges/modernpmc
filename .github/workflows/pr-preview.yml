@@ -40,7 +40,8 @@ jobs:
             graphviz \
             texlive \
             texlive-xetex \
-            latexmk
+            latexmk \
+            imagemagick
 
       - name: Install Python dependencies
         if: github.event.action != 'closed'
@@ -67,7 +68,7 @@ jobs:
       - name: Build PDF
         id: pdf
         if: github.event.action != 'closed'
-        run: jupyter-book build --execute --pdf
+        run: jupyter-book build --execute --pdf 2>&1 | tee pdf-build.log
         continue-on-error: true
 
       - name: Collect artifact
@@ -104,6 +105,14 @@ jobs:
               echo "⚠️ PDF build reported success but no PDF file was found."
             else
               echo "❌ PDF build failed."
+            fi
+            pdf_errors=$(grep -E '(⛔️|fatal:|LaTeX Error:)' pdf-build.log | sed 's/^[[:space:]]*//' || true)
+            if [ -n "$pdf_errors" ]; then
+              echo ""
+              echo "#### PDF errors"
+              echo '```'
+              echo "$pdf_errors"
+              echo '```'
             fi
           } > pr-meta/comment.md
 

@@ -106,14 +106,14 @@ $$
 x \leq y \implies \Psi(x) \leq \Psi(y) 
 $$
 ```
-```{prf:definition} ω-continuous operator
+```{prf:definition} $\omega$-continuous operator
 Let $(L, \leq)$ be a complete lattice and $\Psi\colon L \to L$ a monotone operator.  
-The operator $F$ is _ω-continuous_ if it preserves suprema of countable ascending chains. Formally:
+The operator $F$ is _$\omega$-continuous_ if it preserves suprema of countable ascending chains. Formally:
 Let $(x_i)_{i \ge 0}$ be a countable ascending chain in $L$, i.e., 
 $$
 x_0 \leq x_1 \leq x_2 \leq \dots
 $$
-then $\Psi$ is ω-continuous if:
+then $\Psi$ is $\omega$-continuous if:
 $$
 \Psi\Big(\bigvee_{i \ge 0} x_i\Big) = \bigvee_{i \ge 0} \Psi(x_i)
 $$
