@@ -39,6 +39,12 @@ jobs:
           pip install jupyter ipykernel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-jupyter-book
+
       - name: Install Jupyter Book (MyST)
         run: npm install -g jupyter-book
 
