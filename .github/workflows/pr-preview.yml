@@ -28,12 +28,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Setup uv
-        if: github.event.action != 'closed'
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
+          cache: "pip"
 
       - name: Install system dependencies
         if: github.event.action != 'closed'
@@ -44,8 +39,9 @@ jobs:
       - name: Install Python dependencies
         if: github.event.action != 'closed'
         run: |
-          uv pip install --system jupyter ipykernel
-          if [ -f requirements.txt ]; then uv pip install --system -r requirements.txt; fi
+          python -m pip install --upgrade pip
+          pip install jupyter ipykernel
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Cache npm
         if: github.event.action != 'closed'
