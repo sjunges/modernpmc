@@ -93,7 +93,7 @@ We denote the set of achievable points with $\Ach_\mdp(T_1, \dots, T_m)$.
 We simply write $\Ach$ whenever $\mdp$ and $T_1, \dots, T_m$ is clear from the context.
 
 ````{prf:example}
-Continuing the example above, the policy $\pi$ with $\pi(s_0) = γ$ and $\pi(s_4) = α$ witnesses the achievability of $(0.5, 0.5)$.
+Continuing the example above, the policy $\pi$ with $\pi(s_0) = γ$ and $\pi(s_4) = α$ witnesses the achievability of $(0.5, 0.35)$.
 While we can reach the red states with probability $0.9$ and the blue states with probability $0.6$, the point $(0.9, 0.6)$ is not achievable.
 ````
 
@@ -126,7 +126,7 @@ s0.set_choices({act_a: [(1,s1)], act_b: [(1,s2)]})
 # Add sink self-loops (important for well-formed MDP)
 mdp_rnd.add_self_loops()
           
-sv.to_dot.plot_model_pydot(mdp_rnd, positions={s0: (0,0), s1: (2,0), s2: (-2,0)}, state_colors={"A": "red", "B": "blue"}, default_fill="white")
+sv.to_dot.plot_model_pydot(mdp_rnd, positions={s0: (0,0), s1: (2,0), s2: (-2,0)}, state_colors={"A": "red", "B": "blue"}, default_fill="white", self_loop_position="n")
 ```
 A policy that picks action $a$ and action $b$ both with probability half achieves exactly $(0.5, 0.5)$.
 Thus, $\lambda$ is achievable. 
@@ -165,7 +165,7 @@ s1.set_choices({
 # Add sink self-loops (important for well-formed MDP)
 mdp_mem.add_self_loops()
           
-sv.to_dot.plot_model_pydot(mdp_mem, positions={s0: (0,0), s1: (2,0), s2: (-2,0)}, state_colors={"A": "red", "B": "blue"}, default_fill="white")
+sv.to_dot.plot_model_pydot(mdp_mem, positions={s0: (0,0), s1: (2,0), s2: (-2,0)}, state_colors={"A": "red", "B": "blue"}, default_fill="white",self_loop_position="n")
 ```
 Specifically, a witnessing policy visits first the red state $s_1$ before visiting the blue state $s_2$. 
 In particular, the policy changes its mode once we enter $s_1$: The policy now only wants to optimize reaching the blue state $s_2$. 
