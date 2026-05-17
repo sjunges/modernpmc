@@ -25,7 +25,7 @@ jobs:
 
       - name: Setup Python
         if: github.event.action != 'closed'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
@@ -43,13 +43,39 @@ jobs:
           pip install jupyter ipykernel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      - name: Cache npm
+        if: github.event.action != 'closed'
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-jupyter-book
+
       - name: Install Jupyter Book (MyST)
         if: github.event.action != 'closed'
         run: npm install -g jupyter-book
 
       - name: Build HTML
         if: github.event.action != 'closed'
-        run: jupyter-book build --execute --html
+        run: jupyter-book build --execute --html 2>&1 | tee build.log
+
+      - name: Prepare warnings comment
+        if: github.event.action != 'closed'
+        run: |
+          warnings=$(grep '⚠️' build.log | sed 's/^[[:space:]]*//' || true)
+          if [ -n "$warnings" ]; then
+            printf '### MyST build warnings\n```\n%s\n```\n' "$warnings" > warnings.md
+          else
+            echo '✅ No build warnings.' > warnings.md
+          fi
+
+      - name: Post warnings to PR
+        if: github.event.action != 'closed'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: myst-build-warnings
+          number: ${{ github.event.number }}
+          path: warnings.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Disable Jekyll
         if: github.event.action != 'closed'
@@ -58,7 +84,7 @@ jobs:
           mkdir -p /tmp/nojekyll && touch /tmp/nojekyll/.nojekyll
 
       - name: Ensure .nojekyll at gh-pages root
-        if: github.event.action != 'closed'
+        if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
@@ -66,6 +92,7 @@ jobs:
           clean: false
 
       - name: Deploy or tear down PR preview
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: _build/html

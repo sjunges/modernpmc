@@ -18,7 +18,9 @@ Various examples are still missing and most citations are still missing.
 A lot of material is inspired on chapter ten of the book Principles of Model Checking by Christel Baier and Joost-Pieter Katoen, 
  on the second edition of the book Markov Decision Processes by Martin Puterman, and on lecture slides by Dave Parker.
 I am thankful for the material shared by Tim Quatmann and Joost-Pieter Katoen from RWTH Aachen University, especially on multiobjective model checking, as well as Material from Nils Jansen and Maximilian Weininger from Ruhr University Bochum.
-I am grateful for the comments by Eline Bovy on an earlier version of these lecture notes.
+I am grateful for the comments by Eline Bovy  and Mart Rietdijk on an earlier version of these lecture notes.
+I want to thank Matthias Volk for improvements in CI and PDF building.
+
 
 ## Code examples
 Examples in these lecture notes are generated using stormvogel and the stormvogel teaching module. 
