@@ -1,0 +1,1 @@
+We copied the original plain_latex template and made some minor modifications.
