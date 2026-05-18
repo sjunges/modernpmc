@@ -1,7 +1,9 @@
 # Dockerfile for modernpmc
 ##########################
 # The Docker image can be built by executing:
-# docker build -t yourusername/modernpmc .
+# docker build -t modernpmc .
+# Run with as follows and afterwards open localhost:3000
+# docker run -p 3000:3000 modernpmc
 FROM ubuntu:24.04
 
 # Install dependencies
@@ -27,18 +29,24 @@ RUN apt-get install -y --no-install-recommends \
 
 
 # Set-up virtual environment
-WORKDIR /home/ubuntu
-ENV VIRTUAL_ENV=/home/ubuntu/venv
+WORKDIR /app
+ENV VIRTUAL_ENV=/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install Python requirements
-COPY requirements.txt /tmp/
-RUN pip install -r /tmp/requirements.txt
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy
 COPY . .
 
 # Build
-RUN jupyter-book build --execute --html
-RUN jupyter-book build --execute --pdf
+RUN jupyter book build --execute --html
+RUN jupyter book build --execute --pdf
+
+
+## Serve static HTML
+WORKDIR /app/_build/html
+EXPOSE 3000
+CMD ["python3", "-m", "http.server", "3000"]
