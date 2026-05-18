@@ -36,7 +36,8 @@ jobs:
             texlive \
             texlive-xetex \
             latexmk \
-            imagemagick
+            imagemagick \
+            librsvg2-bin
 
       - name: Install Python dependencies
         run: |
