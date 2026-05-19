@@ -1,0 +1,21 @@
+# Build HTML and PDF version and serve HTML at localhost:3000
+# Run with:
+# docker compose up
+# Build pdf with:
+# docker compose run modernpmc myst build --pdf
+
+services:
+  modernpmc:
+    build: .
+    ports:
+      - "3000:3000"
+      - "3100:3100"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - HOST=0.0.0.0   # ✅ critical!
+    command: >
+      sh -c "
+      myst start --port 3000 --server-port 3100 --keep-host
+      "
