@@ -16,6 +16,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     texlive-latex-base \
     texlive-latex-extra \
     texlive-fonts-recommended \
+    texlive-science \
     texlive-xetex \
     latexmk \
     libsdl2-dev \
