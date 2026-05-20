@@ -1121,9 +1121,11 @@ dfa.plot_symbolic_dfa_pydot(aut)
 
 To formalise what we want, we first lift paths to traces over these executions:
 
-(def:mdp:aptrace)=
-The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$ \aptrace{\xi} = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
+```{prf:definition}
+:label:def:mdp:aptrace
+The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$\aptrace{\xi} = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
 The set of all $\AP$-traces is called $\ApTrace$.
+```
 
 In a Markov chain, we can easily lift the probability of a path to the probability of a trace:
 $$ \pr(\tau) = \sum_{\xi \in \Paths, \aptrace{\xi} = \tau} \pr(\xi). $$
@@ -1288,7 +1290,7 @@ In these lecture notes, we stick to rewards.
 ```
 
 (def:rewardpath)=
-Given a path $\xi = s_0a_0s_1\dots$, the reward of $\xi$ is defined as $$\mathsf{rew}(\xi) = \sum_i = r(s_i, a_i)$$. 
+Given a path $\xi = s_0a_0s_1\dots$, the reward of $\xi$ is defined as $$\mathsf{rew}(\xi) = \sum_i = r(s_i, a_i).$$
 
 
 ## Expected reachability rewards
