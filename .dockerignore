@@ -1,0 +1,7 @@
+Dockerfile
+docker-compose.yml
+_build/
+lecture-notes.pdf
+__pycache__/
+*.pyc
+.git
