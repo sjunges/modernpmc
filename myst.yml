@@ -86,6 +86,6 @@ site:
   options:
   #   favicon: favicon.ico
   #   logo: site_logo.png
-    logo_text: Lecture Notes
+  #   logo_text: Lecture Notes
     style: public/feedback.css
 
