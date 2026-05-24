@@ -7,21 +7,23 @@ on:
 env:
   BASE_URL: /${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.number }}
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: pr-preview-${{ github.event.number }}
   cancel-in-progress: true
 
 jobs:
-  preview:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Save PR metadata
+        run: |
+          mkdir -p pr-meta
+          echo "${{ github.event.number }}" > pr-meta/pr-number.txt
+          echo "${{ github.event.action }}" > pr-meta/action.txt
 
       - name: Setup Python
         if: github.event.action != 'closed'
@@ -34,7 +36,13 @@ jobs:
         if: github.event.action != 'closed'
         run: |
           sudo apt-get update
-          sudo apt-get install -y graphviz
+          sudo apt-get install -y --no-install-recommends \
+            graphviz \
+            texlive \
+            texlive-xetex \
+            latexmk \
+            imagemagick \
+            librsvg2-bin
 
       - name: Install Python dependencies
         if: github.event.action != 'closed'
@@ -58,44 +66,61 @@ jobs:
         if: github.event.action != 'closed'
         run: jupyter-book build --execute --html 2>&1 | tee build.log
 
-      - name: Prepare warnings comment
+      - name: Build PDF
+        id: pdf
         if: github.event.action != 'closed'
-        run: |
-          warnings=$(grep '⚠️' build.log | sed 's/^[[:space:]]*//' || true)
-          if [ -n "$warnings" ]; then
-            printf '### MyST build warnings\n```\n%s\n```\n' "$warnings" > warnings.md
-          else
-            echo '✅ No build warnings.' > warnings.md
-          fi
+        run: jupyter-book build --execute --pdf 2>&1 | tee pdf-build.log
+        continue-on-error: true
 
-      - name: Post warnings to PR
-        if: github.event.action != 'closed'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: myst-build-warnings
-          number: ${{ github.event.number }}
-          path: warnings.md
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Disable Jekyll
+      - name: Collect artifact
         if: github.event.action != 'closed'
         run: |
           touch _build/html/.nojekyll
-          mkdir -p /tmp/nojekyll && touch /tmp/nojekyll/.nojekyll
+          cp -r _build/html pr-meta/html
 
-      - name: Ensure .nojekyll at gh-pages root
-        if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: /tmp/nojekyll
-          clean: false
+          if [ "${{ steps.pdf.outcome }}" == "success" ]; then
+            pdf_src=$(find _build -name "*.pdf" 2>/dev/null | head -1)
+            if [ -n "$pdf_src" ]; then
+              cp "$pdf_src" pr-meta/html/lecture-notes.pdf
+            fi
+          fi
 
-      - name: Deploy or tear down PR preview
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: rossjrw/pr-preview-action@v1
+          warnings=$(grep '⚠️' build.log | sed 's/^[[:space:]]*//' || true)
+          preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.number }}/"
+          {
+            echo "### Preview"
+            echo "🔍 [$preview_url]($preview_url)"
+            echo ""
+            if [ -n "$warnings" ]; then
+              echo "### MyST build warnings"
+              echo '```'
+              echo "$warnings"
+              echo '```'
+            else
+              echo "✅ No build warnings."
+            fi
+            echo ""
+            if [ "${{ steps.pdf.outcome }}" == "success" ] && [ -f pr-meta/html/lecture-notes.pdf ]; then
+              echo "✅ PDF build succeeded. [lecture-notes.pdf](${preview_url}lecture-notes.pdf)"
+            elif [ "${{ steps.pdf.outcome }}" == "success" ]; then
+              echo "⚠️ PDF build reported success but no PDF file was found."
+            else
+              echo "❌ PDF build failed."
+            fi
+            pdf_errors=$(grep -E '(⛔️|fatal:|LaTeX Error:)' pdf-build.log | sed 's/^[[:space:]]*//' || true)
+            if [ -n "$pdf_errors" ]; then
+              echo ""
+              echo "#### PDF errors"
+              echo '```'
+              echo "$pdf_errors"
+              echo '```'
+            fi
+          } > pr-meta/comment.md
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          source-dir: _build/html
-          preview-branch: gh-pages
-          umbrella-dir: pr-preview
-          action: auto
+          name: pr-preview
+          path: pr-meta/
+          include-hidden-files: true
+          retention-days: 1

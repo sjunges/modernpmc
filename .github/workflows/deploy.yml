@@ -31,7 +31,13 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y graphviz
+          sudo apt-get install -y --no-install-recommends \
+            graphviz \
+            texlive \
+            texlive-xetex \
+            latexmk \
+            imagemagick \
+            librsvg2-bin
 
       - name: Install Python dependencies
         run: |
@@ -50,6 +56,10 @@ jobs:
 
       - name: Build HTML
         run: jupyter-book build --execute --html
+
+      - name: Build PDF
+        run: jupyter-book build --execute --pdf
+        continue-on-error: true
 
       - name: Disable Jekyll
         run: touch _build/html/.nojekyll

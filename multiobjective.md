@@ -407,9 +407,12 @@ Next, we take a weight vector $(0.5, 0.9)$ orthogonal to the current face betwee
 :tags: [remove-input]
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.5, 0.9)], figsize=(2, 2), legend="outside") 
 ```
-This yields one more Pareto optimal point.
-
-By adding two more weight vectors, we can prove that there are no further achievable points:
+This yields one more Pareto optimal point; note that we have now found all vertices of the achievable points --- but the algorithm does not know this.
+In particular, there are two faces (to the left and to the right of the new Pareto point) where there is a gap between under- and overapproximation.
+By using weight vectors orthogonal to these faces, we can tighten the overapproximation. 
+With these new weight vectors, we find policies whose induced points coincide with previously found points.
+This also proves that the faces of the underapproximation are Pareto-optimal. 
+That is, there are no further achievable points, as shown in the figure below.
 ```{code-cell} python
 :tags: [remove-input]
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.5, 0.9), (0.1, 0.35), (0.4, 0.55)], figsize=(2, 2), legend="outside") 
