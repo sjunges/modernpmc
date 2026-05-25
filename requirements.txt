@@ -2,5 +2,5 @@ jupyter
 ipykernel
 jupyter-book>=2.0.0
 mystmd
-stormvogel @ git+https://github.com/sjunges/stormvogel.git@dfaandvis
+stormvogel @ git+https://github.com/sjunges/stormvogel.git@teaching-extensions
 stormpy
