@@ -40,6 +40,7 @@ jobs:
             graphviz \
             texlive \
             texlive-xetex \
+            texlive-science \
             latexmk \
             imagemagick \
             librsvg2-bin
