@@ -32,6 +32,9 @@ $c \cdot \vec{p} + (1 - c)\cdot \vec{q} \in R$ for all $c \in [0,1]$.
 
 We say $\vec{p} \in \mathbb{R}^m$ _dominates_ $\vec{q} \in \mathbb{R}^m$, written $\vec{p} \succ \vec{q}$, iff $\vec{p} \geq \vec{q}$ and $\vec{p} \ne \vec{q}$.
 
+For a weight vector $\vec{w} \in \mathbb{R}^m_{\geq 0}$ and a point $\vec{p} \in \mathbb{R}^m$, the _supporting half-plane_ induced by $\vec{w}$ and $\vec{p}$ is
+$$H(\vec{w}, \vec{p}) = \{ \vec{q} \in \mathbb{R}^m \mid \vec{w} \cdot \vec{q} \leq \vec{w} \cdot \vec{p} \}.$$
+
 
 
 ## Distributions

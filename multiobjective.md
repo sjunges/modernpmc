@@ -10,6 +10,7 @@ kernelspec:
   display_name: Python 3
 ---
 
+(chap:multiobjective)=
 # Multiobjective Model Checking and other Tradeoffs
 
 
@@ -171,20 +172,48 @@ Specifically, a witnessing policy visits first the red state $s_1$ before visiti
 In particular, the policy changes its mode once we enter $s_1$: The policy now only wants to optimize reaching the blue state $s_2$. 
 As we formalise [later](#def:multiobjective:unfolding), the policy must thus track which target sets have already been visited. 
 ````
-
-However, it suffices to consider randomising finite-memory policies. 
-```{prf:definition}
-A _randomising finite-memory policy_ is a policy that can be represented as 
-an annotated finite state machine, i.e., by a tuple $\langle Q, \alpha, \delta, q_0 \rangle$
- with 
- - a finite set of nodes $Q$ and initial node $q_0$,
- - an annotation $\alpha\colon Q \times S \rightarrow \Distr{A}$,
- - transition relation $Q \times S \rightarrow Q$.
- 
-The finite state machine defines policy $\pi$ with $$\pi(s_0\dots s_n) = \alpha(\delta(q_0, s_1\dots s_{n-1}), s_n).$$  
+Memory is necessary to distinguish which target states have already been visited along a path. 
+````{prf:example}
+The following with targets $A = \{s_1, s_A\}$ and $B = \{s_1', s_B\}$:
+```{code-cell} python
+:tags: [remove-input]
+mdp_mem2 = sv.model.new_mdp()
+s0_m2 = mdp_mem2.initial_state
+s0_m2.set_friendly_name("s0")
+s1_m2  = mdp_mem2.new_state("A", friendly_name="s1")
+s1p_m2 = mdp_mem2.new_state("B", friendly_name="s1'")
+s2_m2  = mdp_mem2.new_state(friendly_name="s2")
+sA_m2  = mdp_mem2.new_state("A", friendly_name="sA")
+sB_m2  = mdp_mem2.new_state("B", friendly_name="sB")
+act_p2    = mdp_mem2.new_action("p")
+act_al_m2 = mdp_mem2.new_action("α")
+act_be_m2 = mdp_mem2.new_action("β")
+s0_m2.set_choices({act_p2: [(0.5, s1_m2), (0.5, s1p_m2)]})
+s1_m2.set_choices( {act_p2: [(1.0, s2_m2)]})
+s1p_m2.set_choices({act_p2: [(1.0, s2_m2)]})
+s2_m2.set_choices({
+    act_al_m2: [(0.8, sA_m2), (0.2, sB_m2)],
+    act_be_m2: [(0.2, sA_m2), (0.8, sB_m2)],
+})
+mdp_mem2.add_self_loops()
+sv.to_dot.plot_model_pydot(mdp_mem2, state_colors={"A": "red", "B": "blue"}, default_fill="white")
 ```
+There is only one state with a nondeterministic choice, $s_2$, and thus 
+there are two memoryless deterministic policies, $\pi_\alpha$ corresponding to picking $\alpha$, and $\pi_\beta$ to picking $\beta$.
+We obtain:
+$$\pr_{\pi_\alpha}(\lozenge A) = \tfrac{1}{2} \cdot 1 + \tfrac{1}{2} \cdot 0.8 = 0.9, \qquad \Pr(\lozenge B) = \tfrac{1}{2} \cdot 0.2 + \tfrac{1}{2} \cdot 1 = 0.6.$$
+and symmetrically 
+$\pr_{\pi_\beta}(\lozenge A) = 0.6$ and $\pr_{\pi_\beta}(\lozenge B) = 0.9$.
+By randomising we can pick $\alpha$ with probability $x$, we can achieve the points $(0.6 + 0.3x,\; 0.9 - 0.3x)$, lying on the line segment from $(0.6, 0.9)$ to $(0.9, 0.6)$.
+Every such point satisfies $\pr_\pi(\lozenge A) + \pr_\pi(\lozenge B) = 1.5$.
+
+Using (goal) memory, we can improve upon this policy, if we take $\beta$ at $s_2$ if $A$ was already visited and $\alpha$ if $B$ was already visited.
+We then achieve point $(0.9, 0.9)$ and as $\pr(\lozenge A) + \pr(\lozenge B) = 1.8 > 1.5$ it strictly improves upon the memorylessly achievable points.
+````
+
+However, it suffices to consider randomising finite-memory policies, i.e., [finite-state controllers (FSCs)](#def:fsc) from the MDP chapter.
 ```{prf:theorem}
-A point $\vec{\lambda}$ is achievable iff there exists a randomising finite-memory policy that achieves $\vec{\lambda}$.  
+A point $\vec{\lambda}$ is achievable iff there exists an FSC that achieves $\vec{\lambda}$.  
 ```
 
 ### On achievable points
@@ -205,6 +234,8 @@ A point $\vec{p} \in \mathbb{R}^m$ is _Pareto-optimal_ for targets $T_1, \dots, 
 - $\vec{p} \succ \vec{q}$ implies $\vec{q} \in \mathrm{Ach}$, and
 - $\vec{q} \succ \vec{p}$ implies $\vec{q} \notin \mathrm{Ach}$.
 
+Here $\vec{p} \succ \vec{q}$ (read: $\vec{p}$ _dominates_ $\vec{q}$) means $p_i \geq q_i$ for all $i \leq m$ with at least one strict inequality.
+
 The _Pareto curve_  is the set
 $$
 \mathrm{Pareto}
@@ -223,6 +254,9 @@ There is a finite set of points $P$, such that $\Ach$ is the smallest convex and
 ```
 Even stronger (and key to proving the theorem above), these finite points are achieved by deterministic and (bounded) finite-memory policies.
 However, note that $|P|$ can be superpolynomial in the size of the MDP, even if there are just 2 objectives.
+
+In other words, $\Ach$ equals the downward closure of the convex hull of its Pareto-optimal points.
+In 2D, the Pareto curve is a concave piecewise-linear upper-right boundary, and every point coordinate-wise below some point on that boundary is achievable.
 
 
 ### Computing Achievable Points
@@ -279,6 +313,8 @@ The correctness of the construction is summarized by the following theorem:
 ```{prf:lemma}
 If all target states are absorbing, then every achievable point has a memoryless witness.
 ```
+Absorbing targets trap the run once visited, so every non-target decision state is always reached before any target has been seen — the goal-memory bit vector is all zeros at every decision point, making it uninformative.
+
 We remark that the construction is indeed exponential in the number of target sets (only).
 
 #### Deciding achievability via an LP
@@ -363,10 +399,10 @@ We remark that the LP can be extended with an objective such that a solution to 
 #### Computing Pareto curves via weighted reachability
 We now turn our attention to approximating the Pareto curve. 
 We obtain our approximation by computing a subset of the Pareto-optimal policies.
-Clearly, the convex and downward closure of the points achieved by these policies is an underapproximation.
-From the fact that the policies we compute are indeed Pareto-optimal, we also obtain a set of unachievable points.
-The complement of these unachievable points are then an overapproximation of the set of achievable points.
-As the achievable points can be represented by finitely many vertices, the algorithm we present also terminates for any precision $\epsilon$.
+After $k$ iterations, let $\vec{p}^{(1)}, \dots, \vec{p}^{(k)}$ be the Pareto-optimal points found so far.
+The underapproximation $L_k$ is the downward closure of the convex hull of these points; since each $\vec{p}^{(j)}$ is achievable, every point in $L_k$ is achievable.
+The overapproximation $U_k$ is defined by the supporting half-planes induced by each $\vec{p}^{(j)}$; every point outside $U_k$ is not achievable.
+As the achievable points can be represented by finitely many vertices, the algorithm terminates for any precision $\epsilon$, at which point $\|U_k - L_k\| \leq \epsilon$.
 
 More specifically, the key theorem to the approach is the following:
 ```{prf:theorem}
@@ -377,14 +413,23 @@ For $w_i \in (0,1]^m$, the point $\vec{p}$ is Pareto-optimal.
 Clearly, $\vec{p}$ is achievable by $\pi$. The argument that it is also Pareto optimal (for almost all $w$) follows from the fact that every point that dominates $p$ yields a higher weighted reachability.
 Assume that one of those points would be achievable by policy $\hat{\pi}$: Then $\hat{\pi}$ demonstrates that $\pi$ is not optimal w.r.t. weighted reachability, which is a contradiction to the definition.
 
+The theorem also gives a mechanism for the overapproximation.
+Since $\pi$ is optimal for $\vec{w}$, any achievable point $\vec{q}$ must satisfy $\vec{w}\cdot\vec{q} \leq \vec{w}\cdot\vec{p}$: if some achievable $\vec{q}$ had $\vec{w}\cdot\vec{q} > \vec{w}\cdot\vec{p}$, a witnessing policy for $\vec{q}$ would outperform $\pi$, contradicting optimality.
+Each optimal point $\vec{p}^{(j)}$ found with weight $\vec{w}^{(j)}$ therefore yields a supporting half-plane $H(\vec{w}^{(j)}, \vec{p}^{(j)}) \supseteq \Ach$ (see @app:geometry), and the overapproximation after $k$ iterations is their intersection:
+$$U_k = \bigcap_{j=1}^{k} H(\vec{w}^{(j)}, \vec{p}^{(j)}).$$
+A point outside $U_k$ is provably not achievable; a point inside $U_k$ but not yet witnessed has unknown status.
+
 With this theorem, the idea is now to iteratively explore different weight vectors. 
 The theorem above ensures the soundness. 
 Completeness of the algorithm relies on the fact that there are only finitely many policies,
 but also requires carefully selecting the weight vectors. In particular, 
 while every weight vector different to the previous weight vectors sharpens the overapproximation,
 we need to be careful to ensure that we find all vertices in finite time. 
-However, if we pick the weight vectors orthogonal to one of the existing faces of the Pareto curve, we only need as many iterations as the number of faces + number of vertices of the exact Pareto curve.
+However, if we pick the weight vectors orthogonal to one of the existing faces of the Pareto curve, we only need as many iterations as the number of faces + number of vertices of the exact Pareto curve.[^orthogonal]
+
+[^orthogonal]: In 2D, the face between two Pareto-optimal points $\vec{p}^{(1)}$ and $\vec{p}^{(2)}$ is a line segment with direction $\vec{p}^{(2)} - \vec{p}^{(1)}$. A weight vector orthogonal to this face is $(p^{(1)}_2 - p^{(2)}_2,\; p^{(2)}_1 - p^{(1)}_1)$.
 The example below also demonstrates this way of picking weight vectors.
+
 ````{prf:example}
 In the following, we first optimize for the weight vector $(1, 0)$.
 ```{code-cell} python
@@ -394,25 +439,30 @@ _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0)], figsize=(2, 2), legend="o
 ```
 Importantly, we find a policy that achieves $(0.9, 0.1)$ and update the achievable region accordingly.
 We can also update the unachievable points (i.e., the complement of the upper bound), by ruling out the hyperplane.
+Concretely, since $(0.9, 0.1)$ is optimal for $\vec{w} = (1,0)$, every achievable point $\vec{q}$ must satisfy $q_1 \leq 0.9$.
 
 Next, we optimize for the weight vector $(0,1)$.
 ```{code-cell} python
 :tags: [remove-input]
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0)], figsize=(2, 2), legend="outside") 
 ```
-We now see that the convex hull is formed, in particular, points between  two achievable points must also be achievable.
+Let $\vec{p}^{(2)}$ be the optimal point for weight $(0,1)$.
+We now have $U_2 = H((1,0), \vec{p}^{(1)}) \cap H((0,1), \vec{p}^{(2)})$, i.e., every achievable point satisfies $q_1 \leq p^{(1)}_1$ and $q_2 \leq p^{(2)}_2$.
+The underapproximation $L_2$ is the downward closure of the segment between $\vec{p}^{(1)}$ and $\vec{p}^{(2)}$.
+Points between the two Pareto-optimal points must also be achievable (by convexity), but there may be a gap between $L_2$ and $U_2$.
 
 Next, we take a weight vector $(0.5, 0.9)$ orthogonal to the current face between the two Pareto-optimal points:
 ```{code-cell} python
 :tags: [remove-input]
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.5, 0.9)], figsize=(2, 2), legend="outside") 
 ```
-This yields one more Pareto optimal point; note that we have now found all vertices of the achievable points --- but the algorithm does not know this.
-In particular, there are two faces (to the left and to the right of the new Pareto point) where there is a gap between under- and overapproximation.
+Let $\vec{p}^{(3)}$ be the new optimal point.
+The overapproximation tightens to $U_3 = U_2 \cap H((0.5, 0.9), \vec{p}^{(3)})$, and $L_3$ gains $\vec{p}^{(3)}$ as a new vertex.
+Note that we have now found all vertices of the achievable points --- but the algorithm does not know this yet.
+In particular, there are two faces (to the left and to the right of $\vec{p}^{(3)}$) where $U_3 \setminus L_3$ is still nonempty.
 By using weight vectors orthogonal to these faces, we can tighten the overapproximation. 
 With these new weight vectors, we find policies whose induced points coincide with previously found points.
-This also proves that the faces of the underapproximation are Pareto-optimal. 
-That is, there are no further achievable points, as shown in the figure below.
+This also proves that the faces of $L_3$ are Pareto-optimal, i.e., $U_k = L_k$ and there are no further achievable points, as shown in the figure below.
 ```{code-cell} python
 :tags: [remove-input]
 _ = explore_pareto(mdp, ["red", "blue"], [(1.0, 0.0), (0.0, 1.0), (0.5, 0.9), (0.1, 0.35), (0.4, 0.55)], figsize=(2, 2), legend="outside") 
@@ -425,6 +475,8 @@ Specifically, you get reward $w_i$ for every transition between an $S_{-i}$ and 
 While the total reward in general is infinite, it is not if the reward collectible in every MEC is zero.
 As the reward, by construction, is only awarded upon the first entry of some target set, we can only finitely often pick up reward.
 Therefore, the total reward is finite and computable via all standard approaches, see @DBLP:phd/dnb/Quatmann23[Section 4.1.3].
+
+This also connects weighted reachability to goal memory: since the reward query is solved on the unfolded MDP, the optimal policy is memoryless on the unfolded states $(s, b)$ — which is exactly a goal-memory policy on the original MDP, conditioning on the bit vector $b$ of visited targets.
 ````
 
 #### Variant 3: Convex Hull Value Iteration

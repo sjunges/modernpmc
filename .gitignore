@@ -1,0 +1,4 @@
+_build/
+lecture-notes.pdf
+__pycache__/
+*.pyc

@@ -56,6 +56,7 @@ project:
     '\opt': '\mathrm{opt}'
     '\Intervals': '\mathbb{I}'
     '\dfa': '\mathcal{A}'
+    '\fsc': '\mathcal{C}'
     '\Acc': '\mathsf{Acc}'
     '\indicator': '[{#1}]'
     '\ratfunc': '\mathbb{Q}(#1)'

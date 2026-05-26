@@ -3,7 +3,8 @@ numbering:
   heading_1: true
   heading_2: true
   heading_3: true
-  equations: false  
+  equations: false
+  figures: true
 
 kernelspec:
   name: python3
@@ -87,6 +88,43 @@ def create_mdp_parker():
     )
         
 mdp_parker = create_mdp_parker()
+
+
+def create_mdp_pi_max():
+    # States: 0=s0 (initial), 1=s1, 2=s2, 3=s3, 4=t (target), 5=sink
+    def _available_actions(s):
+        return ["a", "b"] if s in [0, 1] else ["a"]
+
+    def _delta(s, act):
+        match s:
+            case 0:
+                match act:
+                    case "a": return 1
+                    case "b": return 2
+            case 1:
+                match act:
+                    case "a": return [(1/2, 4), (1/2, 5)]
+                    case "b": return 3
+            case 2: return [(2/3, 4), (1/3, 5)]
+            case 3: return [(3/4, 4), (1/4, 5)]
+            case 4: return 4
+            case 5: return 5
+
+    def _labels(s):
+        names = ["s0", "s1", "s2", "s3", "t", "sink"]
+        if s == 4:
+            return [names[s], "target"]
+        return names[s]
+
+    def _friendly_name(s):
+        return ["s0", "s1", "s2", "s3", "t", "sink"][s]
+
+    return bird.build_bird(
+        _delta, available_actions=_available_actions, init=0,
+        labels=_labels, modeltype=sv.ModelType.MDP, friendly_names=_friendly_name
+    )
+
+mdp_pi_max = create_mdp_pi_max()
 ```
 
 # What are Markov decision processes?
@@ -202,6 +240,26 @@ $
 \pi \colon S \rightarrow \Distr{A}.
 $
 
+Between the two extremes — general history-dependent policies and memoryless policies — lies the class of _finite-memory policies_, representable by a _finite-state controller_ (FSC).
+
+```{prf:definition} Finite-state controller
+:label: def:fsc
+A _finite-state controller_ (FSC) is a tuple $\langle Q, q_0, \delta_Q, \sigma \rangle$ with
+- a finite set of memory states $Q$ and initial memory state $q_0 \in Q$,
+- a memory-update function $\delta_Q \colon Q \times S \to Q$, and
+- an action-selection function $\sigma \colon Q \times S \to \Distr{A}$.
+
+Starting in memory state $q_0$, at each step the FSC selects action $\sigma(q, s)$ in MDP state $s$ with current memory $q$, then updates memory to $\delta_Q(q, s)$.
+Memoryless policies are the special case $|Q| = 1$: with a single memory state, $\sigma$ depends only on the MDP state.
+```
+
+````{prf:example}
+Let the actions be $\alpha$ and $\beta$.
+The FSC with $Q = \{q_0, q_1\}$, action selection $\sigma(q_0, s) = \alpha$ and $\sigma(q_1, s) = \beta$ for all $s$, and memory update $\delta_Q(q_i, s) = q_{1-i}$, alternates between $\alpha$ and $\beta$ on every step regardless of the MDP state.
+No memoryless policy can reproduce this behaviour, since a memoryless policy must choose the same action distribution at $s$ on every visit.
+````
+Finite-memory policies become essential when the optimal action depends on history — as is the case for @sec:dfa and for @chap:multiobjective.
+
 We furthermore define the set of paths under a policy $\Paths^\pi$ as the set of paths that are consistent with a policy $\pi$. 
 
 
@@ -239,9 +297,19 @@ where
 ```
 `````
 
-```{prf:remark} Two definitions?
-These two constructions yield equivalent Markov chains
-(formally: almost bisimilar).
+````{prf:definition} Induced Markov chain (FSC)
+:label: def:mdp:induced-fsc
+For an FSC $\fsc = \langle Q, q_0, \delta_Q, \sigma \rangle$, the _induced Markov chain_ is
+$\mdp[\fsc] = \langle S \times Q,\, \delta^{\fsc} \rangle$
+with initial state $(\sinit, q_0)$ and transitions
+$$
+\delta^{\fsc}((s,q))((s',q')) = \indicator{\delta_Q(q,s') = q'} \cdot \sum_a \sigma(q,s)(a)\,\delta(s,a)(s').
+$$
+The indicator enforces the deterministic memory update: from $(s,q)$ the only reachable memory successor after moving to $s'$ is $\delta_Q(q, s')$.
+````
+
+```{prf:remark} Three definitions, one concept
+All three induced Markov chains are consistent (up-to some technicality): the general construction (over paths) is bisimilar to the FSC construction (over $S \times Q$), which in turn reduces to the memoryless construction (over $S$) when $|Q| = 1$ — since the single memory state $q_0$ carries no information and $(s, q_0)$ collapses to $s$.
 ```
 
 ````{prf:definition}
@@ -279,6 +347,7 @@ $$
 $$
 ```
 
+(sec:qualitative)=
 ## Qualitative verification
 
 Qualitative verification refers to the setting where the threshold $\lambda$ is either zero or one.
@@ -365,6 +434,7 @@ Consider @ex:mdp:qualitative.
 Starting from $X_0 = T$, the operator $\Psi_{\max>0}$ adds all states with any action reaching the current set in one step.
 ```{code-cell} python
 :tags: [remove-input]
+pass
 visualise_iterations(run_and_collect(spos(mdp_qual, target_states_q)), mdp_qual)
 ```
 ````
@@ -442,6 +512,16 @@ Consider @ex:mdp:qualitative. The GFP starts from $\Spos$ (states that can possi
 visualise_iterations(run_and_collect(smaxas(mdp_qual, target_states_q)), mdp_qual)
 ```
 ````
+
+It is important to note that extracting a policy from the set of states where a witness policy for almost-surely reaching $T$ exists does not make it trivial to extract this policy.
+The policy surely has to select actions in every state such that we stay within the set from which a witnessing policy exists.
+Additionally, to ensure that the target is indeed reached, we must avoid introducing SCCs in the induced MC.
+A simple method is to compute a **randomised** policy: we assign positive probability to every action $a$ at $s \in \Smaxas$ whose support lies within $\Smaxas$.
+Since $s \in \Smaxas$ guarantees at least one such action exists (by definition of the GFP operator $\Psi_{\max=1}$), this policy is well-defined.
+Under it, no non-target strongly connected component within $\Smaxas$ is a bottom SCC, i.e., each SCC is left until we eventually reach the target. 
+The right notion to reason about the extraction of deterministic policies is that of *maximal end-components* (see @sec:mecs).
+
+
 ### Almost-sure reachability (min)
 Finally, we can also define the set of states $$\Sminas = \{ s \mid \forall \pi \text{ s.t. } \pr^\pi(s \models \lozenge T) = 1 \}.$$
 
@@ -449,6 +529,14 @@ Finally, we can also define the set of states $$\Sminas = \{ s \mid \forall \pi 
 ```{attention}
 Not discussed in the lecture. 
 ```
+
+### Relationships between the qualitative sets
+
+The four sets form two inclusion chains with $\Sminas$ as the smallest and $\Spos$ as the largest:
+
+$$\Sminas \subseteq \Sposmin \subseteq \Spos \qquad \text{and} \qquad \Sminas \subseteq \Smaxas \subseteq \Spos.$$
+
+The middle sets $\Sposmin$ and $\Smaxas$ are **incomparable** in general: a state may lie in $\Sposmin \setminus \Smaxas$ (every policy reaches $T$ with positive probability, yet no policy guarantees probability~$1$) or in $\Smaxas \setminus \Sposmin$ (some policy reaches $T$ almost surely, yet another policy avoids $T$ entirely).
 
 ## Quantitative reachability
 
@@ -493,13 +581,14 @@ $$
 These equations are called the Bellman equations _for minimal reachability probabilities_.
 ```
 
-```{code-cell} python
+````{figure}
 :label: fig:mdpparkervis
-:caption: Visualisation of an MDP to illustrate the [Bellman equations for MinReachProb](#thm:bellmaneq:minreachprob). 
+```{code-cell} python
 :tags: [remove-input]
-
 sv.to_dot.plot_model_pydot(mdp_parker)
 ```
+Visualisation of an MDP to illustrate the [Bellman equations for MinReachProb](#thm:bellmaneq:minreachprob).
+````
 
 ````{prf:example}
 :label: ex:bellman:minreachparker
@@ -534,9 +623,10 @@ $$ \inf_{\pi \in \Policies} \pr^\pi(s \models \lozenge T) = \min_{\pi \in \MdPol
 2. There exists a policy $\pi^{*}$ such that for all $s \in S$:
 $$ \pr^{\pi^{*}}(s \models \lozenge T) = \min_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T).$$
 ```
-For any solution to the Bellman equations, it is simple to extract **a** witnessing memoryless deterministic policy $\pi^{*}$---one simply takes $$\pi^{*}(s) = \argmin_{a} \sum_{s'} \delta(s,a)(s') x_{s'}.$$
+For any solution to the Bellman equations, it is simple to extract **a** witnessing memoryless deterministic policy $\pi^{*}$: One simply takes $$\pi^{*}(s) = \argmin_{a} \sum_{s'} \delta(s,a)(s') x_{s'}.$$
+
 We highlight that there is a unique solution to the Bellman equations, but not a unique minimising policy. 
-Furthermore, the theorem justifies talking about minimising policies for a target set, but independently of a specific state.
+Furthermore, the theorem justifies talking about minimising policies for a target set, independently of a specific starting state.
 
 
 
@@ -559,13 +649,14 @@ x_s=
 $$
 ```
 
-```{code-cell} python
+````{figure}
 :label: fig:mdponevis
-:caption: Visualisation of an MDP with no unique solution for [Bellman equations for MaxReachProb](#thm:bellmaneq:maxreachprob). 
+```{code-cell} python
 :tags: [remove-input]
-
 sv.to_dot.plot_model_pydot(mdp_one)
 ```
+Visualisation of an MDP with no unique solution for [Bellman equations for MaxReachProb](#thm:bellmaneq:maxreachprob).
+````
 
 ````{prf:example} 
 :label: ex:maxreachprobnotunique
@@ -591,17 +682,23 @@ For any MDP and target set $T$:
 1. For any state $s$ it holds that
 $$\sup_{\pi \in \Policies} \pr^\pi(\lozenge T) = \max_{\pi \in \MdPolicies} \pr^\pi(\lozenge T) $$
 2. There exists a policy $\pi^{*}$ such that for all $s \in S$:
-$$ \pr^{\pi^{*}}(s \models \lozenge T) = \min_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T).$$
+$$ \pr^{\pi^{*}}(s \models \lozenge T) = \max_{\pi \in \MdPolicies} \pr^\pi(s \models \lozenge T).$$
 ```
 As there is no unique solution to the Bellman equations when maximising, extracting an optimal policy is harder. 
 In particular, while any optimal policy $\pi$ must satisfy $$\pi(s) = \argmax_{a} \sum_{s'} \delta(s,a)(s') x_{s'},$$ this condition is not sufficient. 
 ```{prf:example}
 Consider @ex:maxreachprobnotunique. Both actions in $s_0$ will yield value $0.5$.
 ```
-Instead, we must find a policy that makes progress towards the targets.
-```{attention}
-Content missing.
-```
+Instead, we must find a policy that makes progress towards the targets. 
+A formal construction is given in @BK08 [Lemma 10.102], the idea is as follows.
+First, we preprocess the MDP: we only consider actions in $A^{\max}(s)$, the set of actions that are consistent with the maximum in the Bellman equations.
+All other actions can be removed from the MDP without affecting the maximal reachability probability. 
+On this MDP, we then define the distance to the target as the length of the shortest path to the target.
+This path is bounded in every state that has a positive probability to reach the target. 
+A memoryless deterministic policy $\pi$ is then defined inductively based on this lenght $n$:
+for $s \in T$ (i.e., $n=0$) the policy choice does not matter; for $n > 0$, choose any action $a \in A^{\max}(s)$ with positive probability to reach some state $s'$ whose distance is smaller than that of $s$.
+This intuitively ensures that with some probability, we make progress towards the target, and more formally ensures that we do not create strongly connected components in the induced DTMC.
+
 
 
 ### The notion of value
@@ -639,9 +736,19 @@ $$ \pr_s^\pi(\{ \xi \in \Paths^\pi(s) \mid \infinite(\xi) \text{ is an EC}   \})
 That is, the probability that the choices visited infinitely often from any state onwards form an EC is one. 
 In particular, this means that there are still paths that do not eventually end up in an EC, as there are paths that take any loop infinitely often.
 
+```{prf:remark} MECs and qualitative reachability
+:label: rem:mec-qualitative
+The theorem connects end-components to the qualitative sets from @sec:qualitative.
+A non-target EC is any EC whose states are disjoint from $T$; this includes non-target sink states (trivial MECs) as a special case.
+Under any policy, every run eventually gets trapped in some EC with probability~$1$.
+If that EC is non-target, the run never reaches $T$.
+Hence a state $s$ lies in $\Spos \setminus \Smaxas$ precisely when some policy reaches $T$ positively, yet every policy also assigns positive probability to being trapped in a non-target EC.
+Conversely, $s \in \Smaxas$ means a policy exists whose runs are trapped only in target-containing ECs.
+```
+
 End-components can overlap and can contain other end-components. 
 It is often helpful to consider __maximal end components__ (MECs): 
-Maximal end components are end components not contained in any end component.
+Maximal end components are end components not properly contained in any other end component.
 MECs cannot overlap. 
 MECs can be detected with an efficient graph algorithm @BK08 [Algorithm 47]. 
 
@@ -671,7 +778,8 @@ State $s_5$ is absorbing (a self-loop); it forms a _trivial_ MEC.
 States $s_3$ and $s_4$ each have a "loop" action that transitions to the other state with probability 1.
 Under the "loop/loop" policy the induced sub-MDP is strongly connected and all transitions remain inside $\{s_3, s_4\}$, so this set is a _non-trivial_ MEC.
 The fact that $s_3$ also has an "escape" action to $s_1$, and $s_4$ a "self" action, does not matter: a policy _exists_ that stays inside forever, and that is sufficient.
-These extra actions also create a nested end-component $\{s_4\}$ under the "self" action alone, which is itself contained in the larger MEC $\{s_3, s_4\}$.
+These extra actions also create a nested end-component $\{s_4\}$ under the "self" action alone.
+Since $\{s_4\}$ is properly contained in the MEC $\{s_3, s_4\}$, it is an end-component that is not a maximal end-component.
 
 ````
 
@@ -751,11 +859,17 @@ Under a proper initial policy, $S \setminus \Sposmin$ is an absorbing set; polic
 ```{prf:theorem}
 Policy iteration terminates after finitely many steps and the resulting policy is optimal.
 ```
+The termination argument has two parts.
+First, the improvement step guarantees $V^{\pi_{i+1}}(s) \geq V^{\pi_i}(s)$ for every state $s$: each state either keeps its action (unchanged value) or switches to one with a strictly higher one-step Bellman value under $V^{\pi_i}$, and a standard inductive argument propagates these local improvements to the global values of the new policy.
+Second, whenever $\pi_{i+1} \neq \pi_i$, the strict improvement at at least one state means $V^{\pi_{i+1}} \neq V^{\pi_i}$, so no value vector — and hence no policy — is ever revisited.
+Since there are at most $\prod_{s \in S} |\EnAct{s}|$ memoryless deterministic policies, PI must terminate.
+The termination condition $\pi_i = \pi_{i+1}$ then implies no action can be improved, which by the Bellman equations means the current policy is optimal.
 
 ````{prf:example}
 :label: ex:pi:minreachparker
 We run policy iteration for minimal reachability probability on @fig:mdpparkervis with $s_2$ as the target.
 ```{code-cell} python
+:tags: [remove-input]
 from stormvogel.teaching.policy_iteration import PI, visualise_pi_iterations
 
 pi = PI(mdp_parker, "target", minimize=True)
@@ -764,7 +878,49 @@ visualise_pi_iterations(pi)
 PI converges in two steps.
 The proper initial policy sends $s_3$ to action $b$ (self-loop within $S \setminus \Sposmin$), fixing its value to 0.
 In step 0, $s_0$ takes action $b$ (pessimistic: goes to $s_1$), yielding value 1; improvement then switches $s_0$ to action $a$.
-In step 1 the new scheduler is evaluated to give the exact minimal reachability probabilities, and no further improvement is possible.
+In step 1 the new policy is evaluated to give the exact minimal reachability probabilities, and no further improvement is possible.
+````
+````{prf:example}
+:label: ex:pi:maxreachpimax
+We run policy iteration for maximal reachability probability with $t$ as the target on the following MDP,
+starting from the all-$a$ policy.
+States $t$ (target) and $\mathit{sink}$ are absorbing.
+```{code-cell} python
+:tags: [remove-input]
+sv.to_dot.plot_model_pydot(mdp_pi_max)
+```
+```{code-cell} python
+:tags: [remove-input]
+from stormvogel.teaching.policy_iteration import PI, visualise_pi_iterations
+import stormvogel.result as result
+
+taken = {}
+for s in mdp_pi_max.states:
+    for action, branch in s.choices:
+        if action.label == "a":
+            taken[s] = action
+            break
+    else:
+        taken[s] = list(s.choices)[0][0]
+sched0 = result.Scheduler(mdp_pi_max, taken)
+
+pi_max = PI(mdp_pi_max, "target", minimize=False, scheduler=sched0)
+visualise_pi_iterations(pi_max)
+```
+PI converges in two steps, but a state switches action _twice_.
+
+**Step 0.** 
+Evaluation: $s_1$ reaches $t$ or $\mathit{sink}$ with equal probability, giving $V^{\pi_0}(s_1)=\tfrac{1}{2}$, while $s_2$ and $s_3$ reach $t$ with probability $\tfrac{2}{3}$ and $\tfrac{3}{4}$ respectively.
+Improvement: $s_0$ switches to $b$ (going directly to $s_2$ with value $\tfrac{2}{3}$ beats going to $s_1$ with value $\tfrac{1}{2}$); $s_1$ switches to $b$ (going to $s_3$ with value $\tfrac{3}{4}$ beats the coin flip).
+
+**Step 1.** We use $\pi_1 = \{s_0 \mapsto b,\, s_1 \mapsto b\}$
+Evaluation : $s_1$ now evaluates to $\tfrac{3}{4}$ (via $s_3$), which exceeds $s_2$'s fixed value of $\tfrac{2}{3}$.
+Improvement: $s_0$ switches _back_ to $a$ — routing through $s_1$ (and on to $s_3$) is now better than going directly to $s_2$.
+$s_1$ keeps $b$ (no strict improvement available).
+
+**Step 2.** No action at any state yields a strict improvement; PI terminates.
+
+The example illustrates that individual action choices need not be monotone across PI steps: the value function improves monotonically, but which action is optimal can change as the values of other states are updated.
 ````
 ```{prf:remark}
 Note that the discussion above assumes exact solving of the induced DTMC. Any non-exact solver breaks _all_ guarantees about the correctness of PI.
@@ -904,6 +1060,12 @@ By simple substitution, we have $\Phi(\Phi(\mathbf{0})) = \Phi(\mathbb{1}_T)$.
 Likewise, $\Phi(\Phi(\Phi(\mathbf{0})))$, denoted $\Phi^3(\mathbf{0})$ yields the two-step minimal reachability probabilities and indeed,
 $\Phi^{n+1}(\mathbf{0})$ denotes the $n$-step minimal reachability probabilities.
 
+```{prf:lemma} $n$-step interpretation
+:label: lem:vi:nstep
+$\Phi^n(\mathbf{0})(s)$ equals the minimum probability of reaching $T$ from $s$ within $n$ steps.
+```
+This $n$-step interpretation is the key intuition behind value iteration: each application of $\Phi$ extends the horizon by one step, and taking the limit recovers the unbounded reachability probability $V^{\min}(s)$.
+
 ```{prf:lemma}
 The [Bellman operator for MinReachProb](#def:bellmanop:minreachprob) $\Phi$ is monotonic and $\omega$-continuous.
 ```
@@ -941,9 +1103,8 @@ bellman.visualise_iterations(results, background_gradient="viridis")
 
 A natural stopping criterion for VI is to halt when successive iterates differ by at most $\varepsilon$ pointwise, i.e.\ $\|\Phi^{n+1}(\mathbf{0}) - \Phi^n(\mathbf{0})\|_\infty \leq \varepsilon$.
 Unfortunately, this _local_ near-convergence does not imply that the current iterate is within $\varepsilon$ of $V^{\min}$.
-For MDPs with end components the gap between $\Phi^n(\mathbf{0})$ and $V^{\min}$ can remain arbitrarily large even when successive iterates are indistinguishable @DBLP:journals/tcs/HaddadM18.
-Concretely, the lower sequence $\Phi^n(\mathbf{0})$ may converge to a value strictly below $V^{\min}$ at every finite step, with the true value only reached in the limit.
-Stopping early therefore yields a systematic underestimate with no bound on the error.
+The sequence $\Phi^n(\mathbf{0})$ does converge to $V^{\min}$ in the limit (the fixpoint is unique), but convergence can be arbitrarily slow for MDPs with end components: successive iterates may become indistinguishable while the current value is still far from $V^{\min}$ @DBLP:journals/tcs/HaddadM18.
+Any finite iterate $\Phi^n(\mathbf{0})$ is a strict underestimate of $V^{\min}$, and stopping early yields no computable bound on the remaining error.
 
 #### Interval iteration algorithm
 
@@ -994,10 +1155,12 @@ $$\Phi(V^{\max}) = V^{\max}.$$
 - $\Phi^n(\mathbf{0}) \leq V^{\max}$ for all $n$.
 ```
 
-The application of value iteration is therefore similar to before. Iterating from $\mathbf{0}$ yields a correct result. 
-In contrast to the minimal reachability probability, it is important how we initialise the value iteration as there are multiple fixpoints.
-The simple interval iteration therefore also does not converge and one must ensure that we converge against the least fixed point. 
-The standard way to ensure this is by [eliminating maximal end components](#sec:eliminatemecs). 
+The application of (interval) value iteration is therefore similar to before. 
+However, in contrast to the minimal reachability probability, it is important how we initialise value iteration when non-trivial MECs are present, as there can be multiple fixpoints.
+The from-below sequence $\Phi^n(\mathbf{0})$ still provides a valid lower bound and converges to $V^{\max}$.
+Meanwhile, the from-above sequence $\Phi^n(\mathbf{1})$ converges to the _greatest_ fixpoint, which strictly exceeds $V^{\max}$ (given non-trivial MECs).
+Consequently, the gap between upper and lower bounds never closes, and interval iteration cannot certify convergence.
+The standard remedy is to [eliminate maximal end components](#sec:eliminatemecs) first, which removes the spurious fixpoints and restores uniqueness.
 
 ````{prf:example}
 We run interval iteration on the MDP from the MEC example (see @sec:mecs), computing the maximum probability of reaching $s_2$ (labeled $\mathit{target}$).
@@ -1037,6 +1200,20 @@ bellman.visualise_iterations(results_col)
 ```
 Both bounds meet by iteration 4.
 ````
+
+```{admonition} Summary: interval iteration for min vs. max reachability
+:class: tip
+
+| Setting | Unique fixpoint? | From below $\Phi^n(\mathbf{0})$ | From above $\Phi^n(\mathbf{1})$ | Gap closes? |
+|---------|:---:|---|---|:---:|
+| Min, any MDP | Yes | Converges to $V^{\min}$ | Converges to $V^{\min}$ | Yes (possibly slowly) |
+| Max, MEC-free | Yes | Converges to $V^{\max}$ | Converges to $V^{\max}$ | Yes |
+| Max, with MECs | No | Converges to $V^{\max}$ | Converges to $\gfp{\Phi} > V^{\max}$ | No |
+
+For min and MEC-free max, IVI terminates with a guaranteed $\varepsilon$-approximation.
+For max with MECs, the upper bound stalls at the greatest fixpoint; MEC elimination is required before IVI can be applied.
+```
+
 ## Dynamic programming
 We briefly discuss a dynamic programming approach for [acyclic MDPs](#def:mdp:acyclic). Note that by definition, acyclic MDPs are also MEC-free. 
 We therefore only discuss the minimal reachability probability case here; the maximal reachability probabilities can be computed exactly analogously. 
@@ -1075,6 +1252,7 @@ So far, our exposition focussed exclusively on reachability probabilities.
 In particular, we categorised paths as good or bad, solely depending on whether these paths visit a particular state.
 In this section, we support more general properties on paths.
 
+(sec:dfa)=
 ## DFA properties
 In a first step, we define paths that are accepted by a DFA.
 More precisely, to support such properties, we label states with propositions.
@@ -1084,7 +1262,9 @@ An MDP with states $S$ can be labelled by defining:
 - a labelling function $L\colon S \rightarrow 2^\AP$.
 ```
 ````{prf:example} 
-We consider the following small MDP.
+We consider the following small MDP modelling a person navigating a small town.
+States are labelled with $S$ (supermarket) or $L$ (library) when visiting those locations;
+all other states carry no label.
 ```{code-cell} python
 :tags: [remove-input]
 from stormvogel.examples.minitown import create_minitown_mdp
@@ -1096,6 +1276,9 @@ sv.to_dot.plot_model_pydot(mdp)
 ````
 
 ````{prf:example} 
+Consider the property _"visit both the supermarket and the library, in any order"_.
+This is a DFA property over $\AP = \{S, L\}$.
+The DFA has four states: $q_0$ (initial, neither visited), $q_1$ (supermarket visited first), $q_2$ (library visited first), and $q_3$ (accepting: both visited).
 ```{code-cell} python
 :tags: [remove-input]
 import stormvogel.dfa as dfa
@@ -1121,7 +1304,7 @@ dfa.plot_symbolic_dfa_pydot(aut)
 
 To formalise what we want, we first lift paths to traces over these executions:
 
-```{prf:definition}
+```{prf:definition} AP-trace
 :label:def:mdp:aptrace
 The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$\aptrace{\xi} = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
 The set of all $\AP$-traces is called $\ApTrace$.
@@ -1141,11 +1324,14 @@ Given an MDP with atomic propositions $\AP$, a DFA with alphabet $2^{\AP}$ descr
    $$\pr(s \models \dfa) = \pr(\{ \xi \in \Paths(s) \mid \aptrace{\xi} \in \mathcal{L} \}).$$
 ```
 For MDPs, we then lift to minimal and maximal probabilities analogously to reachability probabilities.
-Note however, that memoryless policies are not sufficient:
+Note however, that memoryless policies are not sufficient.
+Intuitively, satisfying a DFA property may require counting steps or remembering which labels have been seen, which a memoryless policy cannot do.
+For instance, a step-bounded property requires knowing how many steps have been taken, and visiting both the supermarket and the library requires remembering which one was visited first.
 ```{prf:lemma}
+:label: lem:dfa:memoryless-insufficient
 There exist MDPs and DFAs such that:
-1. $$\sup_{\pi \in \Policies} \pr^\pi(\lozenge T) > \max_{\pi \in \MdPolicies} \pr^\pi(\lozenge T) $$
-2. $$\inf_{\pi \in \Policies} \pr^\pi(\lozenge T) < \min_{\pi \in \MdPolicies} \pr^\pi(\lozenge T) $$
+1. $$\sup_{\pi \in \Policies} \pr^\pi(s \models \dfa) > \max_{\pi \in \MdPolicies} \pr^\pi(s \models \dfa) $$
+2. $$\inf_{\pi \in \Policies} \pr^\pi(s \models \dfa) < \min_{\pi \in \MdPolicies} \pr^\pi(s \models \dfa) $$
 ```
 
 ### Reduction to reachability
@@ -1158,13 +1344,25 @@ with initial state $\langle \sinit, \delta_\dfa(q_0, L(\sinit)) \rangle$
 and a transition relation such that
 $$\delta'(\langle s, q \rangle, a)(\langle s', q' \rangle) = \delta_\mdp(s,a)(s') \cdot \indicator{\delta_\dfa(q,L(s')) = q'}$$.
 ```
-Specifically, the state space contains the MDP state and the DFA state. In every transition, we update the DFA state by reading the label of the new MDP state.
+Specifically, the state space contains the MDP state and the DFA state. In every transition, we update the DFA state by reading the label of the _new_ MDP state $s'$.
+The initial DFA state is also determined by reading the label of the initial MDP state immediately, which is why the initial product state is $\langle \sinit, \delta_\dfa(q_0, L(\sinit)) \rangle$ rather than $\langle \sinit, q_0 \rangle$.
+
+```{prf:remark}
+The DFA must be _complete_: every DFA state must have exactly one outgoing transition for every possible label $\sigma \in 2^\AP$.
+This ensures that the product transition $\delta'$ is well-defined for every MDP transition.
+```
 
 In the product, we can then define target states as states that correspond to an accepting state in the DFA.
 ```{prf:theorem}
 For any MDP $\mdp$ with states $S$, DFA property $\dfa$ with accepting states $\Acc$, and $\opt \in \{ \min, \max \}$
 $$ \pr^{\opt}_\mdp(s \models \dfa) = \pr^{\opt}_{\mdp \otimes \dfa}(\lozenge \{ \langle s,q \rangle \mid q \in \Acc  \}). $$
 ```
+```{prf:lemma}
+For any MDP $\mdp$ and DFA $\dfa$, the optimal reachability probability on $\mdp \otimes \dfa$ is achieved by a memoryless deterministic policy.
+Such a policy uses the DFA state as memory and therefore corresponds to a [finite-state controller](#def:fsc) on the original MDP $\mdp$ with memory states $Q_\dfa$.
+In particular, the supremum over all policies in $\mdp$ is attained and equals the maximum over FSCs with memory states $Q_\dfa$.
+```
+This is why the product construction resolves the insufficiency of memoryless policies established in @lem:dfa:memoryless-insufficient.
 
 ````{prf:example} 
 The following visualises the product MDP for the DFA and the MDP above. 
@@ -1239,7 +1437,7 @@ Büchi properties are a specific type of so-called limit properties, where the a
 In finite systems, this specifically means that we can concentrate our analysis on end-components.
 ```{prf:theorem}
 For any $\pi$:
-$$ \pr^\pi( \xi \in \Paths \mid \!\!\!\underbrace{\mathsf{inf}(\xi)}_{\text{choices visited inf often}}\!\!\! \text{ is an EC } ) = 1	$$
+$$ \pr^\pi( \xi \in \Paths \mid \!\!\!\underbrace{\infinite(\xi)}_{\text{choices visited inf often}}\!\!\! \text{ is an EC } ) = 1	$$
 ```
 The proof first observes that for any infinite path in a finite MDP, there must be at least one choice which is visited infinitely often.
 Every successor state of that choice must also be visited infinitely often, and thus in those states, also a choice is visited infinitely often. 
@@ -1257,9 +1455,102 @@ Then:
 1. $\pr^{\max}(\varphi) = \pr^{\max}(\lozenge U_\varphi)$
 2. $\pr^{\min}(\varphi) = 1 - \pr^{\max}(\lozenge V_\varphi)$.	
 ```
+The two parts of the theorem have a pleasing duality.
+For the maximum, a policy satisfies $\varphi$ if and only if it eventually reaches an EC with a target state; so maximising $\pr(\varphi)$ is the same as maximising the probability of reaching $U_\varphi$.
+For the minimum, the adversary (trying to minimise $\pr(\varphi)$) wants to reach an EC without a target state and stay there; so minimising $\pr(\varphi)$ is equivalent to maximising the probability of reaching $V_\varphi$, and thus $\pr^{\min}(\varphi) = 1 - \pr^{\max}(\lozenge V_\varphi)$.
+
 The theorem above gives rise to a (naive) algorithm: Compute all ECs, classify each EC as satisfying or not satisfying, and then solve a reachability probability problem. 
 Note that such an algorithm is not efficient, as there are exponentially many ECs. 
 However, careful graph algorithms with a nested fixpoint operation avoid the necessity to precompute all ECs, while in spirit identifying ECs.
+
+````{prf:example}
+We illustrate the reduction on a 6-state MDP with Büchi state $s_1$.
+```{code-cell} python
+:tags: [remove-input]
+import stormvogel.model as sv_model
+import stormvogel.bird as bird
+import stormvogel.to_dot as to_dot
+
+def create_buchi_mdp():
+    def _available_actions(s):
+        if s in [0, 1, 2, 4]: return ["a", "b"]
+        return ["a"]  # s3, s5 have only one action
+
+    def _delta(s, act):
+        if s == 0:
+            return [(0.7, 1), (0.3, 4)] if act == "a" else [(0.4, 1), (0.6, 4)]
+        if s == 1:
+            return [(1.0, 2)] if act == "a" else [(1.0, 1)]   # a: s1→s2, b: self-loop
+        if s == 2:
+            return [(1.0, 3)] if act == "a" else [(1.0, 2)]   # a: s2→s3, b: self-loop
+        if s == 3:
+            return [(1.0, 1)]                                  # a: s3→s1
+        if s == 4:
+            return [(1.0, 5)] if act == "a" else [(1.0, 4)]   # a: s4→s5, b: self-loop
+        if s == 5:
+            return [(1.0, 4)]                                  # a: s5→s4
+
+    def _labels(s):
+        base = ["s0", "s1", "s2", "s3", "s4", "s5"][s]
+        if s == 1: return [base, "T"]
+        return [base]
+
+    def _friendly_name(s):
+        return ["s0", "s1", "s2", "s3", "s4", "s5"][s]
+
+    return bird.build_bird(_delta, available_actions=_available_actions, init=0,
+        labels=_labels, modeltype=sv_model.ModelType.MDP, friendly_names=_friendly_name)
+
+mdp_buchi = create_buchi_mdp()
+to_dot.plot_model_pydot(mdp_buchi)
+```
+
+We enumerate all ECs, classify each by whether it contains the Büchi state, and label every EC state as $U$ or $V$:
+
+```{code-cell} python
+:tags: [remove-input]
+from stormvogel.teaching.mec import enumerate_ecs, detect_mecs
+from stormvogel.stormpy_utils.model_checking import model_checking
+
+target_states = mdp_buchi.get_states_with_label("T")
+mec_state_sets = {frozenset(mec) for mec in detect_mecs(mdp_buchi)}
+
+# one representative per unique state set; label all EC states U or V
+seen = {}
+for ec in enumerate_ecs(mdp_buchi):
+    label = "U" if ec.satisfies_buchi(target_states) else "V"
+    for s in ec.states:
+        s.add_label(label)
+    if ec.states not in seen:
+        seen[ec.states] = (label, ec)
+
+print(f"{'States':<22}  {'MEC':^5}  {'Sat. φ':^6}")
+print("-" * 38)
+for states, (label, ec) in seen.items():
+    names = "{" + ", ".join(sorted(s.friendly_name for s in states)) + "}"
+    mec_mark  = "✓" if states in mec_state_sets else "✗"
+    sat_mark  = "✓" if label == "U" else "✗"
+    print(f"{names:<22}  {mec_mark:^5}  {sat_mark:^6}")
+```
+
+Notice that $s_2$ appears in both a satisfying EC ($\{s_1, s_2, s_3\}$) and the non-satisfying EC $\{s_2\}$ (✗ in the last column).
+Using only MECs would miss the latter, leaving $s_2 \notin V_\varphi$ and giving the wrong answer for $\Pr^{\min}$.
+
+```{code-cell} python
+:tags: [remove-input, remove-output]
+res_max   = model_checking(mdp_buchi, 'Pmax=? [F "U"]')
+res_min_v = model_checking(mdp_buchi, 'Pmax=? [F "V"]')
+
+s0 = mdp_buchi.initial_state
+pr_max     = res_max.at(s0)
+pr_min_v   = res_min_v.at(s0)
+pr_min     = 1 - pr_min_v
+```
+
+Thus $\Pr^{\max}(\varphi) = \Pr^{\max}(\lozenge U_\varphi) =$ {eval}`f"{pr_max:.4f}"` and
+$\Pr^{\min}(\varphi) = 1 - \Pr^{\max}(\lozenge V_\varphi) = 1 -$ {eval}`f"{pr_min_v:.4f}"` $=$ {eval}`f"{pr_min:.4f}"`.
+````
+
 ```{attention}
 Skipped for now.
 ```
@@ -1289,8 +1580,10 @@ whereas cost is preferred when one tries to minimise (or bound from above) the q
 In these lecture notes, we stick to rewards.
 ```
 
-(def:rewardpath)=
-Given a path $\xi = s_0a_0s_1\dots$, the reward of $\xi$ is defined as $$\mathsf{rew}(\xi) = \sum_i = r(s_i, a_i).$$
+```{prf:definition} Reward of a path
+:label: def:rewardpath
+Given a path $\xi = s_0a_0s_1\dots$, the reward of $\xi$ is defined as $$\mathsf{rew}(\xi) = \sum_i = r(s_i, a_i)$$. 
+```
 
 
 ## Expected reachability rewards
