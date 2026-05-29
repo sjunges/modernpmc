@@ -45,14 +45,12 @@ from stormvogel.examples import create_condensed_monty_hall
 monty_hall_mdp = create_condensed_monty_hall().copy().make_fully_observable()
 plot_model_pydot(monty_hall_mdp)
 ```
-Let's look at the optimal probability to win (and the policy that is optimal):
 ```{code-cell} python
-:tags: [hide-input]
+:tags: [hide-input, remove-output]
 result = sv.model_checking(monty_hall_mdp, 'Pmax=? [F "win"]')
-print(f"Optimal win probability: {result.at_init()}")
 # TODO: visualise scheduler
 ```
-The fully observable MDP admits a policy that wins with probability 1: stay at $g'$ (the initial pick was correct) and switch at $b'$ (the initial pick was wrong).
+The fully observable MDP admits a policy that wins with probability {eval}`result.at_init()`: stay at $g'$ (the initial pick was correct) and switch at $b'$ (the initial pick was wrong).
 This policy, however, relies on distinguishing states $g'$ and $b'$ — that is, knowing whether the initial door choice was correct.
 In the actual game, the player has no access to this information.
 ````
@@ -441,8 +439,12 @@ Let $V^*$ be the optimal reachability probability in $\mathcal{M}^B$, and $V^{K,
 In particular, $c \equiv 1$ is always optimistic and $c \equiv 0$ is always pessimistic.
 As $K \to \infty$, both bounds converge to $V^*(\binit)$.
 ```
-We note the asymetry: Upper bounds are correct using the convexity, 
-whereas the lower bounds must consistently under-approximate a single policy (to then also be affine and thus convex).
+We note the asymmetry between the two directions.
+For over-approximation, a point-wise condition on pure beliefs suffices: if $c(s) \geq V^*(s)$ for all $s$, then for any frontier belief $b_f$,
+$$c \cdot b_f = \sum_s c(s)\,b_f(s) \;\geq\; \sum_s V^*(s)\,b_f(s) \;\geq\; V^*(b_f),$$
+where the second inequality uses convexity of $V^*$ (more specifically, it uses Jensen's inequality).
+For under-approximation, $V^*$ is convex not concave.
+Thus, we use the condition must be tied to a single policy $\pi$: since $V^\pi$ is affine, $\sum_s b_f(s) V^\pi(s) = V^\pi(b_f)$ holds with equality, making the cut consistent with the value of $\pi$ at every frontier belief.
 
 Note that computing such cut-offs is simple: 
 - For lower bounds, picking $\pi$ and evaluating any (e.g., memoryless) observation-based policy yields a pessimistic bound. 
@@ -468,12 +470,11 @@ plot_model_pydot(bmdp_upper)
 With a restricted budget, frontier beliefs appear.
 The pessimistic ($c = 0$) and optimistic ($c = 1$) unfoldings give lower and upper bounds on $V^*$:
 ```{code-cell} python
-:tags: [hide-input]
+:tags: [hide-input, remove-output]
 result_lower = sv.model_checking(bmdp_lower, 'Pmax=? [F "target"]')
 result_upper = sv.model_checking(bmdp_upper, 'Pmax=? [F "target"]')
-print(f"Lower bound: {result_lower.at_init()}")
-print(f"Upper bound: {result_upper.at_init()}")
 ```
+Lower bound: {eval}`result_lower.at_init()`, upper bound: {eval}`result_upper.at_init()`.
 ````
 The finite exploration above is general, 
 but practically only works well if the (reachable fragment of the) belief MDP is small or in presence of good cut-off values.
@@ -482,11 +483,14 @@ but practically only works well if the (reachable fragment of the) belief MDP is
 ### Lovejoy grid discretisation
 In a verification context, proving that no policy achieves a target with a probability above a threshold is arguably the most important task.
 We note that finite belief MDP unrollings tend to converge slowly to useful upper bounds.
-On typical problem is that every step in a belief MDP may only change the belief a tiny bit, so belief MDPs quickly grow out of reasonable bounds.
+One typical problem is that every step in a belief MDP may only change the belief a tiny bit, so belief MDPs quickly grow out of reasonable bounds.
 The following complementary approach constructs a finite MDP that yields overapproximations without relying on cut-off values.
-The key idea is to ensure finite exploration by fixing a finite grid (a point set) $\hat{\mathcal{B}} \subset \mathcal{B}$ upfront.
-Any belief $b' \notin \hat{\mathcal{B}}$ that arises as a successor is not added directly to the state space; 
-instead the belief is represented as a convex combination of the nearest grid points.
+
+The key idea is to fix a finite grid $\hat{\mathcal{B}} \subset \mathcal{B}$ upfront, which will be used as state space.
+Consider first an observation $z$ with two states $\{s_L, s_R\}$: the belief over $S_z$ can be expressed by a single number $p \in [0,1]$, and a grid at resolution $k$ places $k+1$ evenly spaced points $\{0, \tfrac{1}{k}, \tfrac{2}{k}, \dots, 1\}$ on this interval.
+Any off-grid belief $p$ falls between two adjacent grid points $\tfrac{j}{k}$ and $\tfrac{j+1}{k}$, where $j = \lfloor p \cdot k \rfloor$, and is replaced by a mixture of them with weights $(1-\alpha, \alpha)$ where $\alpha = p \cdot k - j$.
+In general, the grid decomposes per observation: for each observation $z$, the beliefs over $S_z$ form a $(|S_z|-1)$-simplex, and $\hat{\mathcal{B}}$ contains a uniform grid over each such simplex at resolution $k$.
+Any belief $b' \notin \hat{\mathcal{B}}$ that arises as a successor is expressed as a convex combination $b' = \sum_i \lambda_i \hat{b}_i$ of grid points, and the transition is redirected to a distribution over those grid points with the same weights $\lambda_i$.
 
 The value of such a belief that is not in the point set can be approximated from above by using the convexity of the value function.
 ```{prf:definition} Convex grid interpolation
@@ -502,8 +506,11 @@ $$
 V^*(b') = V^*\!\left(\sum_i \lambda_i \hat{b}_i\right) \leq \sum_i \lambda_i V^*(\hat{b}_i) \leq \hat{V}(b').
 $$
 
-This value-level observation motivates a concrete finite MDP construction: rather than storing off-grid beliefs as states, 
+This value-level observation motivates a concrete finite MDP construction: rather than storing off-grid beliefs as states,
 redirect every transition that would land on $b' \notin \hat{\mathcal{B}}$ to a distribution over grid beliefs, using the same convex weights $\lambda_i$.
+The resulting Lovejoy grid MDP is a fully observable MDP over grid beliefs: a policy on it knows exactly which grid point it occupies and may choose different actions at different grid points.
+This is strictly more powerful than any policy on the belief MDP: whereas the belief MDP arrives at the single belief $b'$ and must commit to one action, the Lovejoy MDP arrives at a distribution over distinct grid points and can exploit the landing point by playing a different action from each.
+The optimal policy on a Lovejoy grid MDP may thus not refer to an observation-based policy on the POMDP.
 
 ```{prf:definition} Lovejoy grid MDP
 Let $\hat{\mathcal{B}}$ be a finite grid whose convex hull covers $\mathcal{B}$.
@@ -517,29 +524,44 @@ $$
 ```{prf:theorem}
 The maximal reachability probability in $\hat{\mdp}$ is an upper bound on $V^*(\binit)$.
 ```
-We remark that building the convex weights is not always trivial. 
-However, when there are only two states per observation, computing these weights becomes reasonably straightforward using linear interpolation.
+The upper bound holds because any observation-based policy $\pi$ can be applied unchanged in $\hat{\mdp}$, and the affine structure of $V^\pi$ ensures that $\hat{\mdp}$'s optimal policy can only do better.
+As $k \to \infty$, the grid becomes dense in every simplex and the bound converges to $V^*(\binit)$.
+
+````{prf:example} Source of the over-approximation
+:label: ex:pomdp:lovejoy:gap
+Consider two states $s$ and $s'$ sharing an observation, whose optimal actions are opposite: action $a'$ reaches the goal with probability $1$ from $s$, but leads to certain failure from $s'$; action $a$ gives probability $\tfrac{3}{4}$ from $s'$ and only $\tfrac{2}{5}$ from $s$.
+
+Suppose the agent holds belief $b = \{s \mapsto \tfrac{1}{2},\, s' \mapsto \tfrac{1}{2}\}$.
+In the belief MDP, any policy must commit to a single action:
+- Action $a$: $\tfrac{1}{2}\cdot\tfrac{2}{5} + \tfrac{1}{2}\cdot\tfrac{3}{4} = \tfrac{23}{40} \approx 0.575$
+- Action $a'$: $\tfrac{1}{2}\cdot 1 + \tfrac{1}{2}\cdot 0 = \tfrac{1}{2}$
+
+Now suppose $b$ arises as an off-grid successor belief whose convex decomposition gives equal weight to the two extreme grid points $\hat{b} = \{s \mapsto 1\}$ and $\hat{b}' = \{s' \mapsto 1\}$.
+Because the Lovejoy MDP is fully observable, a policy on it can choose action $a'$ from $\hat{b}$ (value $1$) and action $a$ from $\hat{b}'$ (value $\tfrac{3}{4}$), yielding
+$$\tfrac{1}{2}\cdot 1 + \tfrac{1}{2}\cdot\tfrac{3}{4} = \tfrac{7}{8}.$$
+This gap — $\tfrac{7}{8}$ versus $\tfrac{23}{40}$ — arises because the Lovejoy MDP effectively resolves the ambiguity between $s$ and $s'$, acting as if it knows the hidden state.
+````
+
 ````{prf:example}
-We apply the Lovejoy construction to the 4-state POMDP (@ex:pomdp:4state) with initial belief $\binit = \{s_1 \mapsto \tfrac{1}{2}, s_2 \mapsto \tfrac{1}{2}\}$ and grid resolution $k = 8$.
+We apply the Lovejoy construction to the POMDP from @ex:pomdp:4state with initial belief $\binit = \{s_1 \mapsto \tfrac{1}{2}, s_2 \mapsto \tfrac{1}{2}\}$ and grid resolution $k = 8$.
 ```{code-cell} python
-:tags: [hide-input]
+:tags: [hide-input, remove-output]
 from stormvogel.teaching.lovejoy import lovejoy_grid_mdp
 
 lovejoy_mdp = lovejoy_grid_mdp(model, {s1: Fraction(1, 2), s2: Fraction(1, 2)}, k=8)
 plot_model_pydot(lovejoy_mdp)
 result = sv.model_checking(lovejoy_mdp, 'Pmax=? [F "target"]')
-print(f"Lovejoy upper bound: {result.at_init()}")
 ```
-Increasing $k$ refines the grid and tightens the upper bound.
+The Lovejoy upper bound is {eval}`result.at_init()`.
 ````
 
 ````{prf:example}
-We apply the Lovejoy construction to the supremum-not-attained POMDP (@ex:pomdp:supnotattained).
+We apply the Lovejoy construction to POMDP from @ex:pomdp:supnotattained.
 Note that the upper bound here is trivially one (as it is also the supremum). 
 However, the example nicely shows the approximation.
 We take the initial belief $\binit = \{L_l \mapsto \tfrac{1}{2}, R_l \mapsto \tfrac{1}{2}\}$ and grid resolution $k = 8$.
 ```{code-cell} python
-:tags: [hide-input]
+:tags: [hide-input, remove-output]
 l_states = sup_model.compute_states_per_observation()[sup_model.get_observation("l")]
 L_l_state = next(s for s in l_states if s.friendly_name == "L_l")
 R_l_state = next(s for s in l_states if s.friendly_name == "R_l")
@@ -547,9 +569,40 @@ R_l_state = next(s for s in l_states if s.friendly_name == "R_l")
 lovejoy_sup_mdp = lovejoy_grid_mdp(sup_model, {L_l_state: Fraction(1, 2), R_l_state: Fraction(1, 2)}, k=8)
 plot_model_pydot(lovejoy_sup_mdp)
 result_sup = sv.model_checking(lovejoy_sup_mdp, 'Pmax=? [F "target"]')
-print(f"Lovejoy upper bound: {result_sup.at_init()}")
 ```
+The Lovejoy upper bound is {eval}`result_sup.at_init()`.
 ````
+Now lets look at an example with more states per observation. 
+````{prf:example} Three states per observation
+:label: ex:pomdp:lovejoy:3state
+Consider the POMDP below with three states $\mathit{s0}, \mathit{s1}, \mathit{s2}$ sharing observation $z_0$, so beliefs over $z_0$ form a 2-simplex (triangle).
+```{code-cell} python
+:tags: [hide-input]
+from stormvogel.examples import create_atva20_z0_pomdp
+
+z0_model = create_atva20_z0_pomdp()
+plot_model_pydot(z0_model)
+```
+The initial belief is $\binit = \{\mathit{s0} \mapsto 1\}$, a vertex of the triangle.
+Taking action $b$ from $\mathit{s0}$ yields the successor belief $\{\mathit{s0} \mapsto \tfrac{1}{2}, \mathit{s1} \mapsto \tfrac{1}{6}, \mathit{s2} \mapsto \tfrac{1}{3}\}$, which lies in the interior of the triangle.
+```{code-cell} python
+:tags: [hide-input]
+z0_states = z0_model.compute_states_per_observation()[z0_model.get_observation("z0")]
+s0_state = next(s for s in z0_states if s.friendly_name == "s0")  # initial state
+
+lovejoy_z0_2 = lovejoy_grid_mdp(z0_model, {s0_state: Fraction(1)}, k=2)
+result_z0_2 = sv.model_checking(lovejoy_z0_2, 'Pmax=? [F "target"]')
+
+lovejoy_z0_4 = lovejoy_grid_mdp(z0_model, {s0_state: Fraction(1)}, k=4)
+result_z0_4 = sv.model_checking(lovejoy_z0_4, 'Pmax=? [F "target"]')
+
+lovejoy_z0_8 = lovejoy_grid_mdp(z0_model, {s0_state: Fraction(1)}, k=8)
+result_z0_8 = sv.model_checking(lovejoy_z0_8, 'Pmax=? [F "target"]')
+plot_model_pydot(lovejoy_z0_2)
+```
+The Lovejoy upper bound is {eval}`result_z0_2.at_init()` for $k = 2$, {eval}`result_z0_4.at_init()` for $k = 4$, and {eval}`result_z0_8.at_init()` for $k = 8$, confirming that the bound tightens with finer grid resolution.
+````
+
 (sec:fastlowerbounds)=
 ## Lower bounds from memoryless policies
 The optimal policy for a POMDP may in general require unbounded memory.
@@ -609,11 +662,48 @@ This reduces finding the best memoryless policy to **parameter synthesis** for p
 The number of parameters is $O(|\Obs| \cdot \max_z |\EnAct{z}|)$.
 
 ### Adding memory
-Similar to goal unfoldings, specific memorystructures can be folded into the POMDP. 
-Asking for a memoryless policy on this larger POMDP is then equivalent to asking 
-for a finite state controller in a smaller POMDP. 
-While the POMDP grows only polynomially in the number of memory states added, a polynomial growth in the number of parameters makes this quickly infeasible.
 
+The FSC definition (@def:fsc) for MDPs uses MDP states in both the memory update and action selection.
+In a POMDP, the agent can only observe $\obsfun(s)$, not $s$ itself, so both functions must be restricted to observations.
+
+```{prf:definition} Observation-based FSC
+:label: def:pomdp:fsc
+An _observation-based FSC_ for a POMDP is a tuple $\fsc = \langle Q, q_0, \delta_Q, \sigma \rangle$ with
+- a finite set of memory states $Q$ and initial memory state $q_0 \in Q$,
+- a memory-update function $\delta_Q \colon Q \times \Obs \times A \to \Distr{Q}$, and
+- an action-selection function $\sigma \colon Q \times \Obs \to \Distr{A}$.
+```
+
+The induced policy $\pi_\fsc$ follows the same memory-trace construction as in the MDP case (@def:fsc), but uses observations instead of MDP states.
+The memory trace starts at $q(\xi_0) = q_0$; after executing action $a$ with current observation $\obsfun(\last(\xi))$ and memory $q(\xi)$, the next memory state is drawn from $\delta_Q(q(\xi), \obsfun(\last(\xi)), a)$.
+Then $\pi_\fsc(\xi) = \sigma(q(\xi), \obsfun(\last(\xi)))$.
+Because $q(\xi)$ depends on $\xi$ only through the observation-action trace, the policy $\pi_\fsc$ is observation-based.
+
+The product construction formalises how memory is folded into the POMDP.
+
+```{prf:definition} Product POMDP
+:label: def:pomdp:product
+Given a POMDP $\mdp$ and a finite memory structure $(Q, q_0, \delta_Q)$, the _product POMDP_ $\mdp \otimes Q$ has
+- states $S \times Q$,
+- observation function $(s, q) \mapsto (\obsfun(s), q)$ — the agent observes both the POMDP observation and its own memory state,
+- transitions $\delta'((s,q),\, a,\, (s',q')) = \delta(s,a,s') \cdot \delta_Q(q,\, \obsfun(s),\, a)(q')$.
+```
+
+Since the memory state is part of the observation, the agent always knows $q$.
+A _memoryless_ policy on $\mdp \otimes Q$ is a function $\pi \colon \Obs \times Q \to \Distr{A}$, which is exactly the action-selection function $\sigma$ of an observation-based FSC on the original $\mdp$.
+
+```{prf:lemma}
+Observation-based FSCs on $\mdp$ with memory $Q$ are in bijection with memoryless policies on $\mdp \otimes Q$.
+```
+
+The product POMDP has $|S| \cdot |Q|$ states and observation set $\Obs \times Q$, so the pMC reduction from the previous section applies.
+Note however that the number of parameters tends to explode (for practical purposes).
+```{prf:theorem} FSC synthesis as pMC parameter synthesis
+:label: thm:pomdp:fsc-pmc
+Fix a POMDP $\mdp$ and a memory structure $(Q, q_0, \delta_Q)$ with deterministic $\delta_Q$.
+The product POMDP $\mdp \otimes Q$ is an MDP whose induced pMC (under a memoryless stochastic policy parameterised by $\sigma$) is a parametric Markov chain with parameters $\{ \sigma(q, z)(a) \mid q \in Q,\, z \in \Obs,\, a \in \EnAct{z} \}$.
+The reachability value $\Pr^{\pi_\fsc}(\lozenge T)$ in $\mdp$ equals the reachability value in this pMC, so synthesising an optimal FSC with $|Q|$ memory states reduces to parameter synthesis for a pMC.
+```
 
 ### Hardness of the problem
 The existence of a memoryless policy satisfying a reachability threshold is indeed ETR-complete, via the polynomial-time equivalence between this problem and feasibility synthesis for pMCs.

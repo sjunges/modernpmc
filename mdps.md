@@ -39,7 +39,9 @@ def create_mdp_one():
             return [(1,s)]
 
     def _labels(s):
-        return "s"+str(s)
+        if s == 1:
+            return ["target"]
+        return []
         
     def _friendly_name(s):
         return "s"+str(s)
@@ -77,8 +79,8 @@ def create_mdp_parker():
 
     def _labels(s):
         if s == 2:
-            return ["s" + str(s), "target"]
-        return "s"+str(s)
+            return ["target"]
+        return []
         
     def _friendly_name(s):
         return "s"+str(s)
@@ -111,10 +113,9 @@ def create_mdp_pi_max():
             case 5: return 5
 
     def _labels(s):
-        names = ["s0", "s1", "s2", "s3", "t", "sink"]
         if s == 4:
-            return [names[s], "target"]
-        return names[s]
+            return ["target"]
+        return []
 
     def _friendly_name(s):
         return ["s0", "s1", "s2", "s3", "t", "sink"][s]
@@ -246,18 +247,34 @@ Between the two extremes — general history-dependent policies and memoryless p
 :label: def:fsc
 A _finite-state controller_ (FSC) is a tuple $\langle Q, q_0, \delta_Q, \sigma \rangle$ with
 - a finite set of memory states $Q$ and initial memory state $q_0 \in Q$,
-- a memory-update function $\delta_Q \colon Q \times S \to Q$, and
+- a memory-update function $\delta_Q \colon Q \times S \times A \to \Distr{Q}$, and
 - an action-selection function $\sigma \colon Q \times S \to \Distr{A}$.
 
-Starting in memory state $q_0$, at each step the FSC selects action $\sigma(q, s)$ in MDP state $s$ with current memory $q$, then updates memory to $\delta_Q(q, s)$.
-Memoryless policies are the special case $|Q| = 1$: with a single memory state, $\sigma$ depends only on the MDP state.
+Starting in memory state $q_0$, at each step the FSC selects action $a \sim \sigma(q, s)$ in MDP state $s$ with current memory $q$, then samples the next memory state $q' \sim \delta_Q(q, s, a)$.
+Memoryless policies are the special case $|Q| = 1$.
+An FSC is _deterministic_ if both $\sigma$ and $\delta_Q$ are Dirac; it is _action-independent_ if $\delta_Q(q, s, a) = \delta_Q(q, s, a')$ for all $a, a'$.
 ```
 
+An FSC $\fsc$ induces a history-dependent policy $\pi_\fsc \colon \Paths^\mdp \to \Distr{A}$ as follows.
+The _memory trace_ starts at $q(\xi_0) = q_0$, where $\xi_0 = s_0$ is the length-zero path prefix.
+After executing action $a$ in MDP state $\last(\xi)$ with current memory $q(\xi)$, the next memory state is drawn from $\delta_Q(q(\xi), \last(\xi), a)$.
+Then $\pi_\fsc(\xi) = \sigma(q(\xi), \last(\xi))$: the FSC selects actions based on the current memory and MDP state.
+
 ````{prf:example}
-Let the actions be $\alpha$ and $\beta$.
-The FSC with $Q = \{q_0, q_1\}$, action selection $\sigma(q_0, s) = \alpha$ and $\sigma(q_1, s) = \beta$ for all $s$, and memory update $\delta_Q(q_i, s) = q_{1-i}$, alternates between $\alpha$ and $\beta$ on every step regardless of the MDP state.
+Consider the FSC with $Q = \{q_0, q_1\}$, actions $\{\alpha, \beta\}$, action selection $\sigma(q_0, s) = \alpha$ and $\sigma(q_1, s) = \beta$ for all $s$, and memory update $\delta_Q(q_i, s, a) = q_{1-i}$ (toggle on every step, regardless of state or action).
+The memory trace and resulting policy choices for a path $s_0 \alpha s_1 \beta s_0 \alpha s_2$ are:
+
+| Path prefix $\xi$ | $q(\xi)$ | $\pi_\fsc(\xi) = \sigma(q(\xi), \last(\xi))$ |
+|---|---|---|
+| $s_0$ | $q_0$ | $\alpha$ |
+| $s_0 \alpha s_1$ | $\delta_Q(q_0, s_0, \alpha) = q_1$ | $\beta$ |
+| $s_0 \alpha s_1 \beta s_0$ | $\delta_Q(q_1, s_1, \beta) = q_0$ | $\alpha$ |
+| $s_0 \alpha s_1 \beta s_0 \alpha s_2$ | $\delta_Q(q_0, s_0, \alpha) = q_1$ | $\beta$ |
+
+The action alternates on every step regardless of which MDP states are visited.
 No memoryless policy can reproduce this behaviour, since a memoryless policy must choose the same action distribution at $s$ on every visit.
 ````
+
 Finite-memory policies become essential when the optimal action depends on history — as is the case for @sec:dfa and for @chap:multiobjective.
 
 We furthermore define the set of paths under a policy $\Paths^\pi$ as the set of paths that are consistent with a policy $\pi$. 
@@ -303,9 +320,8 @@ For an FSC $\fsc = \langle Q, q_0, \delta_Q, \sigma \rangle$, the _induced Marko
 $\mdp[\fsc] = \langle S \times Q,\, \delta^{\fsc} \rangle$
 with initial state $(\sinit, q_0)$ and transitions
 $$
-\delta^{\fsc}((s,q))((s',q')) = \indicator{\delta_Q(q,s') = q'} \cdot \sum_a \sigma(q,s)(a)\,\delta(s,a)(s').
+\delta^{\fsc}((s,q))((s',q')) = \sum_a \sigma(q,s)(a)\,\delta(s,a)(s') \cdot \delta_Q(q,s,a)(q').
 $$
-The indicator enforces the deterministic memory update: from $(s,q)$ the only reachable memory successor after moving to $s'$ is $\delta_Q(q, s')$.
 ````
 
 ```{prf:remark} Three definitions, one concept
@@ -595,7 +611,7 @@ Visualisation of an MDP to illustrate the [Bellman equations for MinReachProb](#
 Consider the MDP from @fig:mdpparkervis. The Bellman equations for minimal reachability probability are:
 ```{code-cell} python
 :tags: [remove-input]
-equations = bellman.minreachprob(mdp_parker, "s2")
+equations = bellman.minreachprob(mdp_parker, "target")
 Math(r"\\".join([sympy.latex(eq) for eq in equations]))
 ```
 The equations have a unique solution.
@@ -665,7 +681,7 @@ Consider the MDP in @fig:mdponevis. The [Bellman equations for MaxReachProb](#th
 ```{code-cell} python
 :label:eq1
 :tags: [remove-input]
-equations = bellman.maxreachprob(mdp_one, "s1")
+equations = bellman.maxreachprob(mdp_one, "target")
 Math(r"\\".join([sympy.latex(eq) for eq in equations]))
 ```
 In particular, any assignment to $x_0 \geq 0.5$ is part of a valid solution. However, @thm:bellmaneq:maxreachprob clarifies that only $x=0.5$ is a valid solution. 
@@ -767,8 +783,7 @@ sv.to_dot.plot_model_pydot(mdp_ec)
 ```{code-cell} python
 :tags: [remove-input]
 mecs = detect_mecs(mdp_ec)
-for i, mec in enumerate(mecs):
-    print(f"MEC {i}: {sorted(s.friendly_name for s in mec)}")
+[f"MEC {i}: {sorted(s.friendly_name for s in mec)}" for i, mec in enumerate(mecs)]
 ```
 States $s_1$ and $s_2$ have a cycle, but every action has positive probability of escaping to $s_5$.
 No policy can keep the process inside $\{s_1, s_2\}$ forever, so this set is **not** an end component.
@@ -963,7 +978,7 @@ The minimal reachability probability is the unique solution to the following LP 
 ```{code-cell} python
 :tags: [remove-input]
 from stormvogel.teaching.lp import lp_minreachprob
-lp_minreachprob(mdp_parker, "s2")
+lp_minreachprob(mdp_parker, "target")
 ```
 ````
 
@@ -982,7 +997,7 @@ The maximal reachability probability is the unique solution to the following LP 
 ```{code-cell} python
 :tags: [remove-input]
 from stormvogel.teaching.lp import lp_maxreachprob
-lp_maxreachprob(mdp_parker, "s2")
+lp_maxreachprob(mdp_parker, "target")
 ```
 ````
 
@@ -1027,13 +1042,13 @@ $$
 Recall the Bellman equations from @ex:bellman:minreachparker. We now show the Bellman operator:
 ```{code-cell} python
 :tags: [remove-input]
-equations = bellman.minreachprob(mdp_parker, "s2", operator=True)
+equations = bellman.minreachprob(mdp_parker, "target", operator=True)
 Math(r"\\".join([sympy.latex(eq) for eq in equations]))
 ```
 Let us execute the Bellman operator, maybe first on the bottom element of the lattice, which assigns zero to every state.
 ```{code-cell} python
 :tags: [remove-input]
-operator = bellman.make_operator_minreachprob(mdp_parker, "s2")
+operator = bellman.make_operator_minreachprob(mdp_parker, "target")
 phione = operator.apply(bellman.zero_value(mdp_parker))
 Math(r"\\".join(bellman.value_to_latex(phione, "\Phi(\mathbf{0})")))
 ```
@@ -1491,9 +1506,8 @@ def create_buchi_mdp():
             return [(1.0, 4)]                                  # a: s5→s4
 
     def _labels(s):
-        base = ["s0", "s1", "s2", "s3", "s4", "s5"][s]
-        if s == 1: return [base, "T"]
-        return [base]
+        if s == 1: return ["T"]
+        return []
 
     def _friendly_name(s):
         return ["s0", "s1", "s2", "s3", "s4", "s5"][s]
@@ -1524,13 +1538,16 @@ for ec in enumerate_ecs(mdp_buchi):
     if ec.states not in seen:
         seen[ec.states] = (label, ec)
 
-print(f"{'States':<22}  {'MEC':^5}  {'Sat. φ':^6}")
-print("-" * 38)
-for states, (label, ec) in seen.items():
-    names = "{" + ", ".join(sorted(s.friendly_name for s in states)) + "}"
-    mec_mark  = "✓" if states in mec_state_sets else "✗"
-    sat_mark  = "✓" if label == "U" else "✗"
-    print(f"{names:<22}  {mec_mark:^5}  {sat_mark:^6}")
+import pandas as pd
+rows = [
+    (
+        "{" + ", ".join(sorted(s.friendly_name for s in states)) + "}",
+        "✓" if states in mec_state_sets else "✗",
+        "✓" if label == "U" else "✗",
+    )
+    for states, (label, ec) in seen.items()
+]
+pd.DataFrame(rows, columns=["States", "MEC", "Sat. φ"])
 ```
 
 Notice that $s_2$ appears in both a satisfying EC ($\{s_1, s_2, s_3\}$) and the non-satisfying EC $\{s_2\}$ (✗ in the last column).
