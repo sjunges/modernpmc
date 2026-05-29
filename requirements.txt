@@ -1,6 +1,7 @@
+--extra-index-url https://stormchecker.github.io/stormpy-wheels/simple/
 jupyter
 ipykernel
 jupyter-book>=2.1.5
 mystmd
 stormvogel @ git+https://github.com/sjunges/stormvogel.git@teaching-extensions
-stormpy
+stormpy<1.13
