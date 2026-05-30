@@ -4,4 +4,4 @@ ipykernel
 jupyter-book>=2.1.5
 mystmd
 stormvogel @ git+https://github.com/sjunges/stormvogel.git@teaching-extensions
-stormpy<1.13
+stormpy<1.14
