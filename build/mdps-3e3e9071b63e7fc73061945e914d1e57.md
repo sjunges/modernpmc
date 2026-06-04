@@ -686,10 +686,10 @@ Math(r"\\".join([sympy.latex(eq) for eq in equations]))
 ```
 In particular, any assignment to $x_0 \geq 0.5$ is part of a valid solution. However, @thm:bellmaneq:maxreachprob clarifies that only $x=0.5$ is a valid solution. 
 ````
-In general, the problem we observe here is that there are (sets of) states where a policy can choose to stay indefinitely. 
-If these states do not include target states, then staying there forever means that the states have reachability probability $0$,
+In general, the problem we observe here is that there are sets of state-action pairs (choices) under which a policy can stay indefinitely. 
+If the states of these choices do not include target states, then staying there forever means that those states have reachability probability $0$,
 yet the Bellman equations do not enforce that these states must be assigned to zero. 
-In @sec:mecs, these sets of states are called end-components and we show that (roughly) in MDPs without such end-components, the [solutions to the Bellman equations are unique](#thm:mdp:mecfreemaxreach).
+In @sec:mecs, these sets of state-action pairs are called end-components and we show that (roughly) in MDPs without such end-components, the [solutions to the Bellman equations are unique](#thm:mdp:mecfreemaxreach).
 
 
 ```{prf:theorem} Memoryless policies suffice (MaxReachProb)
@@ -747,7 +747,7 @@ An end-component for an MDP $\mdp = \mdptuple$	is a set $X \subseteq S \times A$
 ```{prf:theorem} @BK08 [Theorem 10.120]
 :label: thm:finallyendcomponent
 For any policy $\pi$ and any state $s$:
-$$ \pr_s^\pi(\{ \xi \in \Paths^\pi(s) \mid \infinite(\xi) \text{ is an EC}   \}) = 1 $$
+$$ \pr_s^\pi(\{ \xi \in \Paths^\pi(s) \mid \infinite{\xi} \text{ is an EC}   \}) = 1 $$
 ```
 That is, the probability that the choices visited infinitely often from any state onwards form an EC is one. 
 In particular, this means that there are still paths that do not eventually end up in an EC, as there are paths that take any loop infinitely often.
@@ -785,16 +785,18 @@ sv.to_dot.plot_model_pydot(mdp_ec)
 mecs = detect_mecs(mdp_ec)
 [f"MEC {i}: {sorted(s.friendly_name for s in mec)}" for i, mec in enumerate(mecs)]
 ```
-States $s_1$ and $s_2$ have a cycle, but every action has positive probability of escaping to $s_5$.
-No policy can keep the process inside $\{s_1, s_2\}$ forever, so this set is **not** an end component.
+The output lists the _state projection_ of each MEC (the states whose choices belong to the MEC), not the full set of state-action pairs.
 
-State $s_5$ is absorbing (a self-loop); it forms a _trivial_ MEC.
+States $s_1$ and $s_2$ have a cycle, but every action has positive probability of escaping to $s_5$.
+No policy can keep the process inside $\{s_1, s_2\}$ forever, so there is no end-component over these states.
+
+State $s_5$ is absorbing (a self-loop); the single state-action pair $\{(s_5, \mathit{self})\}$ forms a _trivial_ MEC.
 
 States $s_3$ and $s_4$ each have a "loop" action that transitions to the other state with probability 1.
-Under the "loop/loop" policy the induced sub-MDP is strongly connected and all transitions remain inside $\{s_3, s_4\}$, so this set is a _non-trivial_ MEC.
+The state-action pairs $\{(s_3, \mathit{loop}), (s_4, \mathit{loop})\}$ form a strongly connected sub-MDP that is closed under the chosen actions, making them a _non-trivial_ MEC.
 The fact that $s_3$ also has an "escape" action to $s_1$, and $s_4$ a "self" action, does not matter: a policy _exists_ that stays inside forever, and that is sufficient.
-These extra actions also create a nested end-component $\{s_4\}$ under the "self" action alone.
-Since $\{s_4\}$ is properly contained in the MEC $\{s_3, s_4\}$, it is an end-component that is not a maximal end-component.
+The "self" action of $s_4$ alone yields another end-component: $\{(s_4, \mathit{self})\}$.
+Since $\{(s_4, \mathit{self})\}$ is properly contained in the MEC $\{(s_3, \mathit{loop}), (s_4, \mathit{loop})\}$, it is an end-component that is not a maximal end-component.
 
 ````
 
@@ -1452,7 +1454,7 @@ Büchi properties are a specific type of so-called limit properties, where the a
 In finite systems, this specifically means that we can concentrate our analysis on end-components.
 ```{prf:theorem}
 For any $\pi$:
-$$ \pr^\pi( \xi \in \Paths \mid \!\!\!\underbrace{\infinite(\xi)}_{\text{choices visited inf often}}\!\!\! \text{ is an EC } ) = 1	$$
+$$ \pr^\pi( \xi \in \Paths \mid \!\!\!\underbrace{\infinite{\xi}}_{\text{choices visited inf often}}\!\!\! \text{ is an EC } ) = 1	$$
 ```
 The proof first observes that for any infinite path in a finite MDP, there must be at least one choice which is visited infinitely often.
 Every successor state of that choice must also be visited infinitely often, and thus in those states, also a choice is visited infinitely often. 
