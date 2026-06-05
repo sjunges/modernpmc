@@ -1325,8 +1325,8 @@ dfa.plot_symbolic_dfa_pydot(aut)
 To formalise what we want, we first lift paths to traces over these executions:
 
 ```{prf:definition} AP-trace
-:label: def:mdp:aptrace
-The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$ \aptrace{\xi} = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
+:label:def:mdp:aptrace
+The $\AP$-trace of a path $\xi = s_0a_0s_1a_1 \dots$ omits the actions and lifts states to the labels: $$\aptrace{\xi} = L(s_0)L(s_1) \dots \in \big({2^\AP}\big)^{*}$$.
 The set of all $\AP$-traces is called $\ApTrace$.
 ```
 

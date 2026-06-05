@@ -24,7 +24,7 @@ I want to thank Matthias Volk for improvements in CI and PDF building.
 
 ## Code examples
 Examples in these lecture notes are generated using stormvogel and the stormvogel teaching module. 
-We compute various results using the [storm model checker](www.stormchecker.org), via the python bindings `stormpy`. 
+We compute various results using the [Storm model checker](https://www.stormchecker.org), via the python bindings `stormpy`.
 We generate equations (for displaying) via sympy and visualise graphs with pydot.
 In particular, the following import statements preceed all code used in these lecture notes.
 ```{code-cell} python
