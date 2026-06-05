@@ -139,20 +139,20 @@ The set of all fixpoints of $\Psi$ is denoted $\mathrm{Fix}(\Psi)$.
 Let $(L, \leq)$ be a complete lattice and $\Psi\colon L \to L$ be monotone. Then:
 
 1. $\Psi$ has a _least fixpoint_ $\lfp{\Psi}$ and a _greatest fixpoint_ $\gfp{\Psi}$.  
-They are given by
-
-$$
-\lfp{\Psi} = \bigwedge \{ x \in L \mid \Psi(x) \leq x \}, \quad
-\gfp{\Psi} = \bigvee \{ x \in L \mid x \leq \Psi(x) \}
-$$
+   They are given by
+   
+   $$
+   \lfp{\Psi} = \bigwedge \{ x \in L \mid \Psi(x) \leq x \}, \quad
+   \gfp{\Psi} = \bigvee \{ x \in L \mid x \leq \Psi(x) \}
+   $$
 
 2. If $(x_i)_{i \ge 0}$ is defined by
 
-$$
-x_0 = \bot, \quad x_{i+1} = \Psi(x_i)
-$$
+   $$
+   x_0 = \bot, \quad x_{i+1} = \Psi(x_i)
+   $$
 
-then $\lfp{\Psi} = \bigvee_{i \ge 0} x_i$.
+   then $\lfp{\Psi} = \bigvee_{i \ge 0} x_i$.
 ```
 
 For _finite lattices_, the least fixpoint $\lfp{\Psi}$ can be computed by iterating $\Psi$ starting from the least element $\bot$ until a fixpoint is reached.

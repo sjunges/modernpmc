@@ -4,14 +4,24 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{amssymb}
+\usepackage{amsmath}
 \usepackage{enumitem}
+\usepackage{stmaryrd}
 \bibliographystyle{abbrvnat}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 [-IMPORTS-]
 
 % colors for hyperlinks
 \hypersetup{colorlinks=true, allcolors=blue}
 
+[# if options.logo #]
+\newcommand{\logo}{
+  %\href{https://curvenote.com}{\includegraphics[width=2cm]{curvenote.png}}
+}
+[# endif #]
 
 \title{[-doc.title-]}
 
