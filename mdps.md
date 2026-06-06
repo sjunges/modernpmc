@@ -1736,7 +1736,6 @@ The undiscounted total reward can also be defined,
 but will be infinite if there exists a reachable MEC with non-zero reward.
 If no such MEC exists, then this property can be rewritten
 as reachability reward in a modified MDP with a fresh target state.
-See also 
 ```
 
 
