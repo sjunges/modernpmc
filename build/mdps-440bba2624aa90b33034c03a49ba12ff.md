@@ -766,6 +766,8 @@ End-components can overlap and can contain other end-components.
 It is often helpful to consider __maximal end components__ (MECs): 
 Maximal end components are end components not properly contained in any other end component.
 MECs cannot overlap. 
+In particular, because MECs have disjoint state sets, the _state projection_ of a MEC (i.e., the set of states whose choices belong to it) uniquely identifies the MEC.
+This does not hold for ECs in general: two distinct ECs can have exactly the same state projection while differing in which actions are included, so knowing the state set alone is not enough to determine which EC is meant.
 MECs can be detected with an efficient graph algorithm @BK08 [Algorithm 47]. 
 
 ````{prf:example}
@@ -792,11 +794,11 @@ No policy can keep the process inside $\{s_1, s_2\}$ forever, so there is no end
 
 State $s_5$ is absorbing (a self-loop); the single state-action pair $\{(s_5, \mathit{self})\}$ forms a _trivial_ MEC.
 
-States $s_3$ and $s_4$ each have a "loop" action that transitions to the other state with probability 1.
-The state-action pairs $\{(s_3, \mathit{loop}), (s_4, \mathit{loop})\}$ form a strongly connected sub-MDP that is closed under the chosen actions, making them a _non-trivial_ MEC.
-The fact that $s_3$ also has an "escape" action to $s_1$, and $s_4$ a "self" action, does not matter: a policy _exists_ that stays inside forever, and that is sufficient.
-The "self" action of $s_4$ alone yields another end-component: $\{(s_4, \mathit{self})\}$.
-Since $\{(s_4, \mathit{self})\}$ is properly contained in the MEC $\{(s_3, \mathit{loop}), (s_4, \mathit{loop})\}$, it is an end-component that is not a maximal end-component.
+States $s_3$ and $s_4$ each have a "loop" action that transitions to the other state with probability 1; $s_4$ additionally has a "self" action that is a self-loop.
+The non-trivial MEC is $\{(s_3, \mathit{loop}), (s_4, \mathit{loop}), (s_4, \mathit{self})\}$ with state projection $\{s_3, s_4\}$: the induced sub-MDP is strongly connected and closed.
+The only choice not included is $s_3$'s "escape" to $s_1$, which exits the state projection and therefore cannot be part of any EC over $\{s_3, s_4\}$.
+Both $\{(s_3, \mathit{loop}), (s_4, \mathit{loop})\}$ and $\{(s_4, \mathit{self})\}$ are end-components, but each is properly contained in the MEC above, so neither is maximal.
+Note that $\{(s_3, \mathit{loop}), (s_4, \mathit{loop})\}$ and $\{(s_3, \mathit{loop}), (s_4, \mathit{loop}), (s_4, \mathit{self})\}$ are two distinct ECs with the same state projection $\{s_3, s_4\}$.
 
 ````
 
@@ -844,10 +846,11 @@ For any target set $T$ and any state $s$ not inside a non-trivial MEC, the maxim
 We collapse the end components of the MDP from the previous example.
 ```{code-cell} python
 :tags: [remove-input]
-mdp_collapsed, state_map = eliminate_mecs(mdp_ec, remove_representative_selfloops=False)
+mdp_collapsed, state_map = eliminate_mecs(mdp_ec, remove_representative_selfloops=True)
 sv.to_dot.plot_model_pydot(mdp_collapsed)
 ```
-The non-trivial MEC $\{s_3, s_4\}$ is merged into one representative state.
+The non-trivial MEC $\{s_3, s_4\}$ is merged into one representative state carrying only the exit choices. 
+In particular, we do not retain the self-loop at the representative as this looping behavior is not relevant for maximal reachability probabilities.
 The trivial MEC $\{s_5\}$ and the non-MEC states $s_0$, $s_1$, $s_2$ are preserved unchanged.
 ````
 
@@ -1118,7 +1121,7 @@ bellman.visualise_iterations(results, background_gradient="viridis")
 ```
 ````
 
-A natural stopping criterion for VI is to halt when successive iterates differ by at most $\varepsilon$ pointwise, i.e.\ $\|\Phi^{n+1}(\mathbf{0}) - \Phi^n(\mathbf{0})\|_\infty \leq \varepsilon$.
+A natural stopping criterion for VI is to halt when successive iterates differ by at most $\varepsilon$ pointwise, i.e., $\|\Phi^{n+1}(\mathbf{0}) - \Phi^n(\mathbf{0})\|_\infty \leq \varepsilon$.
 Unfortunately, this _local_ near-convergence does not imply that the current iterate is within $\varepsilon$ of $V^{\min}$.
 The sequence $\Phi^n(\mathbf{0})$ does converge to $V^{\min}$ in the limit (the fixpoint is unique), but convergence can be arbitrarily slow for MDPs with end components: successive iterates may become indistinguishable while the current value is still far from $V^{\min}$ @DBLP:journals/tcs/HaddadM18.
 Any finite iterate $\Phi^n(\mathbf{0})$ is a strict underestimate of $V^{\min}$, and stopping early yields no computable bound on the remaining error.
@@ -1733,7 +1736,6 @@ The undiscounted total reward can also be defined,
 but will be infinite if there exists a reachable MEC with non-zero reward.
 If no such MEC exists, then this property can be rewritten
 as reachability reward in a modified MDP with a fresh target state.
-See also 
 ```
 
 
