@@ -36,6 +36,7 @@ jobs:
             texlive \
             texlive-xetex \
             texlive-science \
+            texlive-latex-extra \
             latexmk \
             imagemagick \
             librsvg2-bin
