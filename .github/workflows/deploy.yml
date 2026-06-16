@@ -57,7 +57,17 @@ jobs:
         run: npm install -g jupyter-book
 
       - name: Build HTML
-        run: jupyter-book build --execute --html
+        run: jupyter-book build --execute --html 2>&1 | tee build.log
+
+      - name: Summarize build warnings
+        run: |
+          warnings=$(grep -E '(⚠️|SyntaxWarning)' build.log | sed 's/^[[:space:]]*//' || true)
+          if [ -n "$warnings" ]; then
+            echo "### Build warnings" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$warnings" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Build PDF
         run: jupyter-book build --execute --pdf

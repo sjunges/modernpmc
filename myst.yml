@@ -89,4 +89,5 @@ site:
   #   logo: site_logo.png
   #   logo_text: Lecture Notes
     style: public/feedback.css
+    logo_text: Lecture Notes
 

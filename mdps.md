@@ -1055,7 +1055,7 @@ Let us execute the Bellman operator, maybe first on the bottom element of the la
 :tags: [remove-input]
 operator = bellman.make_operator_minreachprob(mdp_parker, "target")
 phione = operator.apply(bellman.zero_value(mdp_parker))
-Math(r"\\".join(bellman.value_to_latex(phione, "\Phi(\mathbf{0})")))
+Math(r"\\".join(bellman.value_to_latex(phione, r"\Phi(\mathbf{0})")))
 ```
 Indeed, the probabilities we see here are the zero-step reachability probabilities to the target states.
 
@@ -1063,13 +1063,13 @@ If we apply the Bellman operator once more, we get the one-step minimal reachabi
 ```{code-cell} python
 :tags: [remove-input]
 phitwo = operator.apply(phione)
-Math(r"\\".join(bellman.value_to_latex(phitwo, "\Phi(\Phi(\mathbf{0}))")))
+Math(r"\\".join(bellman.value_to_latex(phitwo, r"\Phi(\Phi(\mathbf{0}))")))
 ```
 And after one more application, the two-step reachability probabilities.
 ```{code-cell} python
 :tags: [remove-input]
 phithree = operator.apply(phitwo)
-Math(r"\\".join(bellman.value_to_latex(phithree, "\Phi^3(\mathbf{0})")))
+Math(r"\\".join(bellman.value_to_latex(phithree, r"\Phi^3(\mathbf{0})")))
 ```
 ````
 
@@ -1231,7 +1231,7 @@ Both bounds meet by iteration 4.
 | Max, with MECs | No | Converges to $V^{\max}$ | Converges to $\gfp{\Phi} > V^{\max}$ | No |
 
 For min and MEC-free max, IVI terminates with a guaranteed $\varepsilon$-approximation.
-For max with MECs, the upper bound stalls at the greatest fixpoint; MEC elimination is required before IVI can be applied.
+For max with MECs, the upper bound stalls at the greatest fixpoint. To ensure convergence, MEC elimination is required.
 ```
 
 ## Dynamic programming
