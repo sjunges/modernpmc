@@ -77,11 +77,17 @@ project:
     '\obsfun': '\mathsf{obs}'
     '\obstr': '\obsfun(#1)'
     '\binit': 'b_\mathrm{init}'
+  error_rules:
+    - rule: link-resolves
+      severity: ignore
+      keys:
+        - 'https://github.com/sjunges/modernpmc/discussions/new?category=*'
 site:
   template: book-theme
   options:
   #   favicon: favicon.ico
   #   logo: site_logo.png
-    logo_text: Lecture Notes
+  #   logo_text: Lecture Notes
     style: public/feedback.css
+    logo_text: Lecture Notes
 

@@ -40,6 +40,8 @@ jobs:
             graphviz \
             texlive \
             texlive-xetex \
+            texlive-science \
+            texlive-latex-extra \
             latexmk \
             imagemagick \
             librsvg2-bin
@@ -85,7 +87,7 @@ jobs:
             fi
           fi
 
-          warnings=$(grep '⚠️' build.log | sed 's/^[[:space:]]*//' || true)
+          warnings=$(grep -E '(⚠️|SyntaxWarning)' build.log | sed 's/^[[:space:]]*//' || true)
           preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.number }}/"
           {
             echo "### Preview"
@@ -113,6 +115,14 @@ jobs:
               echo "#### PDF errors"
               echo '```'
               echo "$pdf_errors"
+              echo '```'
+            fi
+            pdf_warnings=$(grep -E 'Missing character:' pdf-build.log | sed 's/^[[:space:]]*//' | sort -u || true)
+            if [ -n "$pdf_warnings" ]; then
+              echo ""
+              echo "#### PDF warnings (missing characters)"
+              echo '```'
+              echo "$pdf_warnings"
               echo '```'
             fi
           } > pr-meta/comment.md

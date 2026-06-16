@@ -6,11 +6,11 @@ kernelspec:
 
 # Preface
 These lecture notes are written for the course Model Checking at Radboud University and cover part of the material.
-The notes are currently in alpha state.
+The notes are currently in beta state --- the text has been carefully checked, but for next year, some parts may be rearranged as we add additional content. 
+Additionally, the text is currently short on bibliographic remarks and citations.
 
 ```{attention}
-With the attention blocks, we highlight blocks that are still missing. 
-Various examples are still missing and most citations are still missing.
+With the attention blocks, we highlight blocks that are missing. 
 ```
 
 
@@ -18,13 +18,13 @@ Various examples are still missing and most citations are still missing.
 A lot of material is inspired on chapter ten of the book Principles of Model Checking by Christel Baier and Joost-Pieter Katoen, 
  on the second edition of the book Markov Decision Processes by Martin Puterman, and on lecture slides by Dave Parker.
 I am thankful for the material shared by Tim Quatmann and Joost-Pieter Katoen from RWTH Aachen University, especially on multiobjective model checking, as well as Material from Nils Jansen and Maximilian Weininger from Ruhr University Bochum.
-I am grateful for the comments by Eline Bovy  and Mart Rietdijk on an earlier version of these lecture notes.
+I am grateful for the comments by Eline Bovy, Linus Heck, Mart Rietdijk, and Sonia Welinder on an earlier version of these lecture notes.
 I want to thank Matthias Volk for improvements in CI and PDF building.
 
 
 ## Code examples
 Examples in these lecture notes are generated using stormvogel and the stormvogel teaching module. 
-We compute various results using the [storm model checker](www.stormchecker.org), via the python bindings `stormpy`. 
+We compute various results using the [Storm model checker](https://www.stormchecker.org), via the python bindings `stormpy`.
 We generate equations (for displaying) via sympy and visualise graphs with pydot.
 In particular, the following import statements preceed all code used in these lecture notes.
 ```{code-cell} python

@@ -486,5 +486,5 @@ Currently skipped.
 
 ## Tractable hyperproperties
 ```{attention}
-Work in progress
+Currently skipped.
 ```
