@@ -4,5 +4,5 @@ ipykernel
 jupyter-book>=2.1.6
 mystmd
 stormvogel @ git+https://github.com/stormchecker/stormvogel.git
-stormpy==1.13.2
+stormpy==1.14.0
 scipy
