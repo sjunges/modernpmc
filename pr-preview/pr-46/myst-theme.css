@@ -1,0 +1,60 @@
+/* User Provided Stylesheet */
+
+/* ── GitHub issue links injected by feedback-links.mjs ── */
+/* Target by URL since the React renderer doesn't pass data.class to <a> */
+
+a[href*="modernpmc/discussions/new"] {
+  display: inline-block;
+  float: right;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  padding: 1px 6px;
+  margin-left: 0.75em;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  text-decoration: none;
+  color: #6b7280;
+  opacity: 0;
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+  user-select: none;
+}
+
+/* Suppress the theme's external-link arrow icon */
+a[href*="modernpmc/discussions/new"]::after {
+  display: none !important;
+}
+
+/* Show on heading hover */
+h2:hover a[href*="modernpmc/discussions/new"],
+h3:hover a[href*="modernpmc/discussions/new"],
+h4:hover a[href*="modernpmc/discussions/new"],
+h5:hover a[href*="modernpmc/discussions/new"] {
+  opacity: 0.55;
+  border-color: #d1d5db;
+}
+
+a[href*="modernpmc/discussions/new"]:hover,
+a[href*="modernpmc/discussions/new"]:focus {
+  opacity: 1 !important;
+  border-color: #6b7280;
+  color: #111827;
+  outline: none;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  a[href*="modernpmc/discussions/new"] {
+    color: #a8a29e;
+  }
+  h2:hover a[href*="modernpmc/discussions/new"],
+  h3:hover a[href*="modernpmc/discussions/new"],
+  h4:hover a[href*="modernpmc/discussions/new"],
+  h5:hover a[href*="modernpmc/discussions/new"] {
+    border-color: #44403c;
+  }
+  a[href*="modernpmc/discussions/new"]:hover,
+  a[href*="modernpmc/discussions/new"]:focus {
+    color: #f5f5f4;
+    border-color: #78716c;
+  }
+}
